@@ -6,16 +6,9 @@ import {
 	GithubAuthProvider,
 	signInWithPopup,
 } from "firebase/auth";
+import { firebaseConfig } from "./firebaseConfig";
 
-const firebaseConfig = {
-	apiKey: "AIzaSyAOE9s0386qyGOLTPe77_huObgSFPa8jBU",
-	authDomain: "studybuddy-9003a.firebaseapp.com",
-	projectId: "studybuddy-9003a",
-	storageBucket: "studybuddy-9003a.firebasestorage.app",
-	messagingSenderId: "411733866528",
-	appId: "1:411733866528:web:525b5c0b52efa5cb862445",
-	measurementId: "G-H29XYM4096",
-};
+// Firebase config is now imported from firebaseConfig.js
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

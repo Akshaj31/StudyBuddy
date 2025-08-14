@@ -1,0 +1,86 @@
+/* src/App.css */
+
+/*
+  Default styles for all screen sizes (including mobile).
+  The orbs are hidden by default.
+*/
+.light-orb {
+	position: absolute;
+	opacity: 0.5;
+	z-index: -1;
+	display: none;
+}
+
+/*
+  Media query for larger screens.
+  This makes the orbs visible and applies the desktop-specific styles.
+*/
+@media (min-width: 768px) {
+	.light-orb {
+		display: block;
+		filter: blur(250px);
+	}
+
+	.light-orb-1 {
+		top: 20%;
+		left: 5%;
+		width: 500px;
+		height: 400px;
+		/* Subtle, darker orbs with minimal yellow presence */
+		background: radial-gradient(
+				circle at 30% 30%,
+				#ffd859 8%,
+				#4f8bff 20%,
+				transparent 75%
+			),
+			radial-gradient(
+				circle at 70% 60%,
+				#ffeb82 4%,
+				#3a7fff 15%,
+				transparent 85%
+			);
+	}
+
+	.light-orb-2 {
+		bottom: -5%;
+		right: 5%;
+		width: 400px;
+		height: 600px;
+		/* Reduced intensity for darker atmosphere */
+		background: radial-gradient(
+				circle at 60% 40%,
+				#ffd859 10%,
+				#4f8bff 25%,
+				transparent 80%
+			),
+			radial-gradient(
+				circle at 20% 70%,
+				#ffeb82 6%,
+				#3a7fff 18%,
+				transparent 88%
+			);
+	}
+}
+
+.border-light-gradient {
+	position: relative;
+	z-index: 0;
+}
+
+.border-light-gradient::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	padding: 1px;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.7) 0%,
+		rgba(153, 153, 153, 0.4) 80%
+	);
+	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	pointer-events: none;
+	z-index: -1;
+}

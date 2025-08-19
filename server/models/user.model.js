@@ -49,6 +49,82 @@ const userSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now,
 	},
+	documents: [
+		{
+			documentId: {
+				type: String,
+				required: true,
+			},
+			filename: {
+				type: String,
+				required: true,
+			},
+			originalName: {
+				type: String,
+				required: true,
+			},
+			filePath: {
+				type: String,
+				required: true,
+			},
+			uploadedAt: {
+				type: Date,
+				default: Date.now,
+			},
+			pageCount: {
+				type: Number,
+				default: 0,
+			},
+			status: {
+				type: String,
+				enum: ["processing", "completed", "failed"],
+				default: "processing",
+			},
+		},
+	],
+	chatSessions: [
+		{
+			sessionId: {
+				type: String,
+				required: true,
+			},
+			title: {
+				type: String,
+				default: "New Chat",
+			},
+			messages: [
+				{
+					role: {
+						type: String,
+						enum: ["user", "assistant"],
+						required: true,
+					},
+					content: {
+						type: String,
+						required: true,
+					},
+					timestamp: {
+						type: Date,
+						default: Date.now,
+					},
+					relatedDocuments: [
+						{
+							documentId: String,
+							pages: [Number],
+						},
+					],
+				},
+			],
+			createdAt: {
+				type: Date,
+				default: Date.now,
+			},
+			updatedAt: {
+				type: Date,
+				default: Date.now,
+			},
+		},
+	],
 });
 
 const User = mongoose.model("User", userSchema);

@@ -4,6 +4,8 @@ import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
+import ChatPage from "./components/ChatPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Hero from "./components/Hero";
 import HeroCards from "./components/HeroCards";
@@ -12,10 +14,11 @@ function AppContent() {
 	const location = useLocation();
 
 	useEffect(() => {
-		// Pages that should not scroll
+		// Pages that should not scroll and hide navbar
 		const noScrollPages = ["/login", "/register", "/dashboard"];
+		const chatPages = location.pathname.startsWith("/chat");
 
-		if (noScrollPages.includes(location.pathname)) {
+		if (noScrollPages.includes(location.pathname) || chatPages) {
 			document.body.style.overflow = "hidden";
 		} else {
 			document.body.style.overflow = "auto";
@@ -31,12 +34,37 @@ function AppContent() {
 		<div className="text-white min-h-screen">
 			<div className="light-orb light-orb-1"></div>
 			<div className="light-orb light-orb-2"></div>
-			{/* Hide navbar on dashboard */}
-			{location.pathname !== "/dashboard" && <Navbar />}
+			{/* Hide navbar on dashboard and chat */}
+			{!["/dashboard"].includes(location.pathname) &&
+				!location.pathname.startsWith("/chat") && <Navbar />}
 			<Routes>
 				<Route path="/register" element={<Register />} />
 				<Route path="/login" element={<Login />} />
 				<Route path="/dashboard" element={<Dashboard />} />
+				<Route
+					path="/chat/new"
+					element={
+						<ErrorBoundary>
+							<ChatPage />
+						</ErrorBoundary>
+					}
+				/>
+				<Route
+					path="/chat/:sessionId"
+					element={
+						<ErrorBoundary>
+							<ChatPage />
+						</ErrorBoundary>
+					}
+				/>
+				<Route
+					path="/chat"
+					element={
+						<ErrorBoundary>
+							<ChatPage />
+						</ErrorBoundary>
+					}
+				/>
 				<Route path="/" element={<Hero />} />
 				<Route path="/features" element={<HeroCards />} />
 			</Routes>

@@ -1,12 +1,78 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth.jsx";
+import { useNavigate } from "react-router-dom";
+import { documentAPI, handleAPIError } from "../services/api.js";
 
 const Dashboard = () => {
 	const [activeSection, setActiveSection] = useState("Dashboard");
 	const [aiInput, setAiInput] = useState("");
+	const [attachedFiles, setAttachedFiles] = useState([]);
+	const [uploading, setUploading] = useState(false);
 
 	// Use the authentication hook
 	const { user, authenticated, loading, logout } = useAuth();
+	const navigate = useNavigate();
+
+	// File attachment handlers
+	const handleFileSelect = (e) => {
+		const files = Array.from(e.target.files);
+		const validFiles = files.filter((file) => file.type === "application/pdf");
+
+		if (validFiles.length !== files.length) {
+			alert("Only PDF files are supported. Other files were skipped.");
+		}
+
+		setAttachedFiles((prev) => [...prev, ...validFiles]);
+		// Clear the input so same file can be selected again
+		e.target.value = "";
+	};
+
+	const handleRemoveFile = (index) => {
+		setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
+	};
+
+	const handleKeyPress = (e) => {
+		if (e.key === "Enter" && !e.shiftKey) {
+			e.preventDefault();
+			handleSendMessage();
+		}
+	};
+
+	const handleSendMessage = async () => {
+		if ((!aiInput.trim() && attachedFiles.length === 0) || uploading) return;
+
+		try {
+			setUploading(true);
+
+			// If files are attached, upload them first
+			if (attachedFiles.length > 0) {
+				const response = await documentAPI.uploadFiles(attachedFiles);
+				const result = await handleAPIError(response);
+
+				// Navigate to chat page with initial message and uploaded documents
+				navigate("/chat/new", {
+					state: {
+						initialMessage:
+							aiInput.trim() ||
+							"I've uploaded some documents. Can you help me understand them?",
+						uploadedDocuments: result.documents,
+					},
+				});
+			} else if (aiInput.trim()) {
+				// Navigate to chat page with just the message
+				navigate("/chat/new", {
+					state: {
+						initialMessage: aiInput.trim(),
+					},
+				});
+			}
+		} catch (error) {
+			console.error("Error:", error);
+			alert(`Error: ${error.message}`);
+		} finally {
+			setUploading(false);
+		}
+	};
 
 	// Debug user data (remove in production)
 	useEffect(() => {
@@ -331,17 +397,151 @@ const Dashboard = () => {
 								</div>
 							</div>
 
-							<div className="relative">
-								<input
-									type="text"
-									value={aiInput}
-									onChange={(e) => setAiInput(e.target.value)}
-									placeholder="Ask me anything about your subjects... 💡"
-									className="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 text-white placeholder-gray-400 focus:outline-none focus:border-[#ffd859]/50 focus:bg-white/15 transition-all duration-300 pr-32"
-								/>
-								<button className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-[#ffd859] to-[#ffeb82] hover:from-[#ffeb82] hover:to-[#ffd859] px-6 py-3 rounded-xl text-black font-bold transition-all duration-300 shadow-lg shadow-[#ffd859]/25 hover:scale-105">
-									Ask AI ✨
-								</button>
+							{/* Attached Files Display */}
+							{attachedFiles.length > 0 && (
+								<div className="mb-4 space-y-2">
+									<div className="text-sm text-gray-400 mb-2">
+										Attached files:
+									</div>
+									{attachedFiles.map((file, index) => (
+										<div
+											key={index}
+											className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg p-3"
+										>
+											<div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+												<svg
+													className="w-4 h-4 text-red-400"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+													/>
+												</svg>
+											</div>
+											<div className="flex-1 min-w-0">
+												<div className="text-white text-sm font-medium truncate">
+													{file.name}
+												</div>
+												<div className="text-gray-400 text-xs">
+													{(file.size / 1024 / 1024).toFixed(1)} MB
+												</div>
+											</div>
+											<button
+												onClick={() => handleRemoveFile(index)}
+												className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+											>
+												<svg
+													className="w-4 h-4"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M6 18L18 6M6 6l12 12"
+													/>
+												</svg>
+											</button>
+										</div>
+									))}
+								</div>
+							)}
+
+							<div className="space-y-4">
+								{/* Input with attachment button */}
+								<div className="relative">
+									<div className="flex items-center gap-2">
+										<div className="flex-1 relative">
+											<input
+												type="text"
+												value={aiInput}
+												onChange={(e) => setAiInput(e.target.value)}
+												onKeyPress={handleKeyPress}
+												placeholder={
+													attachedFiles.length > 0
+														? "Ask about your uploaded files..."
+														: "Ask me anything or upload files to get started... 💡"
+												}
+												className="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 text-white placeholder-gray-400 focus:outline-none focus:border-[#ffd859]/50 focus:bg-white/15 transition-all duration-300"
+												disabled={uploading}
+											/>
+										</div>
+
+										{/* File Upload Button */}
+										<label className="flex-shrink-0 p-3 text-gray-400 hover:text-[#ffd859] transition-colors cursor-pointer hover:bg-white/10 rounded-lg border border-transparent hover:border-white/20">
+											<svg
+												className="w-5 h-5"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+												/>
+											</svg>
+											<input
+												type="file"
+												accept=".pdf"
+												multiple
+												className="hidden"
+												onChange={handleFileSelect}
+												disabled={uploading}
+											/>
+										</label>
+
+										{/* Send Button */}
+										<button
+											onClick={handleSendMessage}
+											disabled={
+												(!aiInput.trim() && attachedFiles.length === 0) ||
+												uploading
+											}
+											className="flex-shrink-0 bg-gradient-to-r from-[#ffd859] to-[#ffeb82] hover:from-[#ffeb82] hover:to-[#ffd859] px-6 py-3 rounded-xl text-black font-bold transition-all duration-300 shadow-lg shadow-[#ffd859]/25 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+										>
+											{uploading ? (
+												<div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+											) : (
+												"Ask AI ✨"
+											)}
+										</button>
+									</div>
+								</div>
+
+								{/* Quick Actions */}
+								<div className="flex gap-3 text-sm">
+									<button
+										onClick={() => setAiInput("Summarize this document for me")}
+										className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-white transition-all duration-200"
+									>
+										✨ Summarize
+									</button>
+									<button
+										onClick={() =>
+											setAiInput("Create study notes from this material")
+										}
+										className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-white transition-all duration-200"
+									>
+										📝 Study Notes
+									</button>
+									<button
+										onClick={() =>
+											setAiInput("Generate quiz questions from this content")
+										}
+										className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-white transition-all duration-200"
+									>
+										❓ Quiz Me
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>

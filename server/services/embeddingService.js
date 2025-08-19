@@ -11,3 +11,7 @@ export async function getEmbedding(text) {
   const result = await embeddingModel.embedContent(embedContentRequest);
   return result.embedding.values;
 }
+
+export const  saveEmbeddings = async() => {
+    
+}

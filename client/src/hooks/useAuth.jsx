@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { authAPI, handleAPIError } from "../services/api.js";
 
 // Custom hook for handling authentication
 export const useAuth = () => {
@@ -19,19 +20,10 @@ export const useAuth = () => {
 			}
 
 			// Verify token with backend
-			const response = await fetch(
-				"http://localhost:4000/api/v1/user/verify-token",
-				{
-					method: "GET",
-					headers: {
-						Authorization: `Bearer ${token}`,
-						"Content-Type": "application/json",
-					},
-				}
-			);
+			const response = await authAPI.verifyToken();
 
 			if (response.ok) {
-				const data = await response.json();
+				const data = await handleAPIError(response);
 				setUser(data.user);
 				setAuthenticated(true);
 

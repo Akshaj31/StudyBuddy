@@ -284,3 +284,74 @@ export const updateUserProfile = async (req, res) => {
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
+
+// Get all chat sessions for a user
+export const getChatSessions = async (req, res) => {
+	try {
+		const userId = req.userId || req.user._id;
+
+		const user = await User.findById(userId).select("chatSessions");
+		if (!user) {
+			return res.status(404).json({ error: "User not found" });
+		}
+
+		// Return sessions sorted by most recent
+		const sessions = user.chatSessions.sort(
+			(a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+		);
+
+		return res.status(200).json({ sessions });
+	} catch (error) {
+		console.error("Error getting chat sessions:", error);
+		return res.status(500).json({ error: "Failed to get chat sessions" });
+	}
+};
+
+// Get a specific chat session with messages
+export const getChatSession = async (req, res) => {
+	try {
+		const userId = req.userId || req.user._id;
+		const { sessionId } = req.params;
+
+		const user = await User.findById(userId);
+		if (!user) {
+			return res.status(404).json({ error: "User not found" });
+		}
+
+		const session = user.chatSessions.find((s) => s.sessionId === sessionId);
+		if (!session) {
+			return res.status(404).json({ error: "Chat session not found" });
+		}
+
+		return res.status(200).json(session);
+	} catch (error) {
+		console.error("Error getting chat session:", error);
+		return res.status(500).json({ error: "Failed to get chat session" });
+	}
+};
+
+// Delete a chat session
+export const deleteChatSession = async (req, res) => {
+	try {
+		const userId = req.userId || req.user._id;
+		const { sessionId } = req.params;
+
+		const user = await User.findById(userId);
+		if (!user) {
+			return res.status(404).json({ error: "User not found" });
+		}
+
+		// Remove the session from the array
+		user.chatSessions = user.chatSessions.filter(
+			(s) => s.sessionId !== sessionId
+		);
+		await user.save();
+
+		return res
+			.status(200)
+			.json({ message: "Chat session deleted successfully" });
+	} catch (error) {
+		console.error("Error deleting chat session:", error);
+		return res.status(500).json({ error: "Failed to delete chat session" });
+	}
+};

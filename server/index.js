@@ -3,11 +3,12 @@ import "dotenv/config";
 import uploadRoute from "./routes/uploadRoute.js";
 import queryRoute from "./routes/queryRoute.js";
 import userRoute from "./routes/userRoute.js";
+import dataRoute from "./routes/dataRoute.js";
 import path from "path";
 import fs from "fs";
 import mongoose from "mongoose";
 import cors from "cors";
-import { Pinecone } from '@pinecone-database/pinecone';
+// import { Pinecone } from '@pinecone-database/pinecone';
 
 // dotenv.config();
 
@@ -33,10 +34,6 @@ mongoose
 		process.exit(1);
 	});
 
-
-
-
-
 // Serve static files from uploads folder
 app.use("/uploads", express.static(uploadDir));
 
@@ -46,6 +43,8 @@ app.use("/api/v1/upload", uploadRoute);
 app.use("/api/v1/query", queryRoute);
 
 app.use("/api/v1/user", userRoute);
+
+app.use("/api/v1/data", dataRoute);
 
 app.get("/", (req, res) => {
 	console.log("Hello World");

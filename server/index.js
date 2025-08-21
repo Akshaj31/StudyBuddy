@@ -47,8 +47,7 @@ app.use("/api/v1/user", userRoute);
 app.use("/api/v1/data", dataRoute);
 
 app.get("/", (req, res) => {
-	console.log("Hello World");
-	res.send("Hello World");
+	res.send("StudyBuddy API Server");
 });
 
 const PORT = process.env.PORT || 4000;

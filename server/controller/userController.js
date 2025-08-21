@@ -92,8 +92,6 @@ export const loginUserWithGoogle = async (req, res) => {
 
 		// Verify Firebase ID token
 		const decodedToken = await admin.auth().verifyIdToken(idToken);
-		console.log("Google decoded token:", decodedToken); // Debug log
-
 		const { uid, email, name, picture } = decodedToken;
 
 		// Find or create user
@@ -136,7 +134,6 @@ export const loginUserWithGithub = async (req, res) => {
 
 		// Verify Firebase ID token
 		const decodedToken = await admin.auth().verifyIdToken(idToken);
-		console.log("GitHub decoded token:", JSON.stringify(decodedToken, null, 2)); // Debug log
 
 		// GitHub tokens might have different field names
 		const uid = decodedToken.uid || decodedToken.user_id;
@@ -145,8 +142,6 @@ export const loginUserWithGithub = async (req, res) => {
 		const name = decodedToken.name || decodedToken.display_name;
 		const picture = decodedToken.picture || decodedToken.photo_url;
 
-		console.log("Extracted data:", { uid, email, name, picture }); // Debug log
-
 		// Handle case where GitHub doesn't provide email (private email settings)
 		if (!email) {
 			// Get GitHub username from the Firebase identities
@@ -154,15 +149,11 @@ export const loginUserWithGithub = async (req, res) => {
 			if (githubId) {
 				// Create a unique identifier using GitHub ID
 				email = `github_${githubId}@placeholder.local`;
-				console.log("Created placeholder email for GitHub user:", email);
 			} else {
 				// Fallback to using Firebase UID
 				email = `github_${uid}@placeholder.local`;
-				console.log("Created fallback email using Firebase UID:", email);
 			}
 		}
-
-		console.log("Final email for user creation/lookup:", email); // Debug log
 
 		// Find or create user - first try by Firebase UID, then by email
 		let user = await User.findOne({
@@ -170,7 +161,6 @@ export const loginUserWithGithub = async (req, res) => {
 		});
 
 		if (!user) {
-			console.log("Creating new user for GitHub authentication"); // Debug log
 			user = await User.create({
 				uid: uid,
 				email,
@@ -178,14 +168,11 @@ export const loginUserWithGithub = async (req, res) => {
 				fullName: name || "",
 				authProvider: "github",
 			});
-			console.log("New user created:", user); // Debug log
 		} else {
-			console.log("Existing user found:", user); // Debug log
 			// Update the user's info if it was found by UID but has different email
 			if (user.email !== email) {
 				user.email = email;
 				await user.save();
-				console.log("Updated user email:", email);
 			}
 		}
 

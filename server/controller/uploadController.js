@@ -6,13 +6,6 @@ import { v4 as uuidv4 } from "uuid";
 
 export const handleFileUpload = async (req, res) => {
 	const files = req.files;
-
-	// Debug: Check what's available in req
-	console.log("🔍 Auth Debug - req.userId:", req.userId);
-	console.log("🔍 Auth Debug - req.user:", req.user);
-	console.log("🔍 Auth Debug - req.user._id:", req.user?._id);
-	console.log("🔍 Auth Debug - req.user.id:", req.user?.id);
-
 	const userId = req.userId || req.user?._id || req.user?.id; // Use the correct field from auth middleware
 
 	if (!files || files.length === 0) {
@@ -33,11 +26,6 @@ export const handleFileUpload = async (req, res) => {
 				sourceFile: documentId,
 				userId: userId,
 			}));
-
-			console.log("🔍 Upload Controller - Sample page metadata:", {
-				sourceFile: pagesWithMetadata[0]?.sourceFile,
-				userId: pagesWithMetadata[0]?.userId,
-			});
 
 			// Step 2: Generate embeddings
 			const pageEmbeddings = await processPagesToEmbeddings(pagesWithMetadata);

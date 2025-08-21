@@ -328,14 +328,14 @@ const ChatPage = () => {
 							className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 text-gray-400 hover:bg-gray-800/30 hover:text-gray-200"
 						>
 							<span className="text-base">×</span>
-							<span className="text-sm font-medium">Clear</span>
+							<span className="text-base font-medium">Clear</span>
 						</button>
 					</div>
 
 					{/* Chat History */}
 					<div className="flex-1 flex flex-col min-h-0 overflow-hidden">
 						<div className="flex items-center justify-between mb-4 flex-shrink-0">
-							<h3 className="text-gray-300 font-medium text-base">Chats</h3>
+							<h3 className="text-gray-300 font-semibold text-base">Chats</h3>
 							<span className="text-xs text-gray-500">
 								{chatSessions.length}
 							</span>
@@ -389,10 +389,10 @@ const ChatPage = () => {
 											}`}
 										>
 											<div className="flex-1 min-w-0">
-												<div className="font-medium truncate text-base leading-5">
+												<div className="font-medium truncate text-sm leading-5">
 													{session.title || "Untitled Chat"}
 												</div>
-												<div className="text-sm opacity-60 mt-0.5">
+												<div className="text-xs opacity-60 mt-0.5">
 													{messageCount} msgs
 												</div>
 											</div>
@@ -407,7 +407,7 @@ const ChatPage = () => {
 									<div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-3">
 										<span className="text-2xl opacity-50">💬</span>
 									</div>
-									<p className="text-gray-400 text-base">No chat history yet</p>
+									<p className="text-gray-400 text-sm">No chat history yet</p>
 								</div>
 							)}
 						</div>
@@ -443,7 +443,7 @@ const ChatPage = () => {
 					<div className="flex items-center justify-between">
 						<div className="flex items-center space-x-3">
 							<div>
-								<h3 className="text-gray-200 font-medium text-base">Chat</h3>
+								<h3 className="text-gray-200 font-bold text-xl">Chat</h3>
 							</div>
 						</div>
 						<div className="flex items-center space-x-2">
@@ -476,7 +476,7 @@ const ChatPage = () => {
 												: "bg-gray-800/50 text-gray-200"
 										} rounded-lg p-4 border-light-gradient`}
 									>
-										<div className="text-base leading-relaxed">
+										<div className="text-sm leading-relaxed">
 											{message.role === "assistant" ? (
 												<div className="prose prose-sm prose-invert max-w-none">
 													<ReactMarkdown
@@ -485,25 +485,25 @@ const ChatPage = () => {
 															// Fun and engaging styling for students
 															p: (props) => (
 																<p
-																	className="mb-3 text-gray-200 leading-relaxed text-base"
+																	className="mb-3 text-gray-200 leading-relaxed text-sm"
 																	{...props}
 																/>
 															),
 															h1: (props) => (
 																<h1
-																	className="text-lg font-bold mb-4 mt-5 text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text border-l-4 border-yellow-400 pl-3"
+																	className="text-xl font-bold mb-4 mt-5 text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text border-l-4 border-yellow-400 pl-3"
 																	{...props}
 																/>
 															),
 															h2: (props) => (
 																<h2
-																	className="text-lg font-bold mb-3 mt-4 text-transparent bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text border-l-3 border-green-400 pl-2"
+																	className="text-lg font-semibold mb-3 mt-4 text-transparent bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text border-l-3 border-green-400 pl-2"
 																	{...props}
 																/>
 															),
 															h3: (props) => (
 																<h3
-																	className="text-base font-bold mb-2 mt-3 text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text"
+																	className="text-sm font-bold mb-2 mt-3 text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text"
 																	{...props}
 																/>
 															),
@@ -567,7 +567,7 @@ const ChatPage = () => {
 													</ReactMarkdown>
 												</div>
 											) : (
-												<div className="whitespace-pre-wrap">
+												<div className="whitespace-pre-wrap text-sm">
 													{message.content}
 												</div>
 											)}
@@ -636,7 +636,7 @@ const ChatPage = () => {
 													style={{ animationDelay: "0.2s" }}
 												></div>
 											</div>
-											<span className="text-base text-slate-400">
+											<span className="text-sm text-slate-400">
 												AI is thinking...
 											</span>
 										</div>
@@ -659,20 +659,19 @@ const ChatPage = () => {
 							onChange={(e) => setInputValue(e.target.value)}
 							onKeyPress={handleKeyPress}
 							placeholder="Type a message..."
-							className="flex-1 bg-gray-800/50 border border-gray-700/50 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-600 focus:border-gray-600 text-base border-light-gradient"
+							className="flex-1 bg-gray-800/50 border border-gray-700/50 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-600 focus:border-gray-600 text-sm border-light-gradient"
 							disabled={isLoading}
 						/>
 						<button
 							onClick={() => sendMessage()}
 							disabled={!inputValue.trim() || isLoading}
-							className="px-5 py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-base font-medium"
+							className="px-5 py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm font-medium"
 						>
 							{isLoading ? (
 								<div className="w-4 h-4 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
 							) : (
-								"Send"
+								<span>Send</span>
 							)}
-							<span>Send</span>
 						</button>
 					</div>
 				</div>

@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { useNavigate } from "react-router-dom";
-import { documentAPI, handleAPIError } from "../services/api.js";
+import { documentAPI, queryAPI, handleAPIError } from "../services/api.js";
 
 const Dashboard = () => {
 	const [activeSection, setActiveSection] = useState("Dashboard");
 	const [aiInput, setAiInput] = useState("");
 	const [attachedFiles, setAttachedFiles] = useState([]);
 	const [uploading, setUploading] = useState(false);
+	const [chatSessions, setChatSessions] = useState([]);
+	const [loadingChats, setLoadingChats] = useState(true);
 
 	// Use the authentication hook
 	const { user, authenticated, loading, logout } = useAuth();
@@ -80,6 +82,32 @@ const Dashboard = () => {
 			console.log("Authenticated user:", user);
 		}
 	}, [user]);
+
+	// Fetch chat sessions
+	const fetchChatSessions = useCallback(async () => {
+		if (!authenticated) return;
+
+		try {
+			setLoadingChats(true);
+			console.log("🔍 Fetching chat sessions...");
+			const response = await queryAPI.getChatSessions();
+			const result = await handleAPIError(response);
+
+			console.log("🔍 Chat sessions API response:", result);
+			console.log("🔍 Sessions array:", result.sessions);
+
+			setChatSessions(result.sessions || []);
+		} catch (error) {
+			console.error("❌ Error fetching chat sessions:", error);
+			setChatSessions([]);
+		} finally {
+			setLoadingChats(false);
+		}
+	}, [authenticated]);
+
+	useEffect(() => {
+		fetchChatSessions();
+	}, [fetchChatSessions]);
 
 	// Show loading state while checking authentication
 	if (loading) {
@@ -240,13 +268,10 @@ const Dashboard = () => {
 
 	return (
 		<div className="flex h-screen">
-			{/* Enhanced Sidebar */}
-			<div className="w-72 bg-white/[0.02] backdrop-blur-xl border-r border-white/10 flex flex-col relative">
-				{/* Decorative gradient overlay */}
-				<div className="absolute inset-0 bg-gradient-to-b from-[#ffd859]/5 via-transparent to-[#4f8bff]/5 pointer-events-none" />
-
+			{/* Minimal Sidebar */}
+			<div className="w-72 bg-white/[0.02] backdrop-blur-xl border-r border-white/10 flex flex-col">
 				{/* Logo Section */}
-				<div className="relative p-8 border-b border-white/10">
+				<div className="p-8 border-b border-white/10">
 					<div className="flex items-center gap-4">
 						<div className="relative">
 							<div className="w-12 h-12 bg-gradient-to-br from-[#ffd859] to-[#ffeb82] rounded-2xl flex items-center justify-center shadow-lg shadow-[#ffd859]/25">
@@ -262,7 +287,7 @@ const Dashboard = () => {
 				</div>
 
 				{/* Navigation */}
-				<nav className="flex-1 p-6 relative">
+				<nav className="flex-1 p-6">
 					<ul className="space-y-3">
 						{sidebarItems.map((item) => (
 							<li key={item.name}>
@@ -506,7 +531,7 @@ const Dashboard = () => {
 												(!aiInput.trim() && attachedFiles.length === 0) ||
 												uploading
 											}
-											className="flex-shrink-0 bg-gradient-to-r from-[#ffd859] to-[#ffeb82] hover:from-[#ffeb82] hover:to-[#ffd859] px-6 py-3 rounded-xl text-black font-bold transition-all duration-300 shadow-lg shadow-[#ffd859]/25 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+											className="flex-shrink-0 bg-gradient-to-r from-[#ffd859] to-[#ffeb82] hover:from-[#ffeb82] hover:to-[#ffd859] px-6 py-3 rounded-xl text-black font-bold transition-all duration-300 shadow-lg shadow-[#ffd859]/25 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border-light-gradient"
 										>
 											{uploading ? (
 												<div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
@@ -690,6 +715,79 @@ const Dashboard = () => {
 								</div>
 							))}
 						</div>
+					</div>
+
+					{/* Recent Chats */}
+					<div className="bg-white/[0.03] backdrop-blur-xl rounded-3xl p-8 border border-white/10">
+						<div className="flex items-center justify-between mb-6">
+							<h3 className="text-2xl font-bold text-white">Recent Chats</h3>
+							<button
+								onClick={() => navigate("/chat")}
+								className="text-sm text-[#ffd859] hover:text-[#ffeb82] transition-colors"
+							>
+								View All →
+							</button>
+						</div>
+
+						{loadingChats ? (
+							<div className="space-y-4">
+								{[1, 2, 3].map((i) => (
+									<div
+										key={i}
+										className="animate-pulse flex gap-4 p-4 bg-white/5 rounded-2xl"
+									>
+										<div className="w-12 h-12 bg-white/10 rounded-xl"></div>
+										<div className="flex-1 space-y-2">
+											<div className="h-4 bg-white/10 rounded w-3/4"></div>
+											<div className="h-3 bg-white/10 rounded w-1/2"></div>
+										</div>
+									</div>
+								))}
+							</div>
+						) : chatSessions.length > 0 ? (
+							<div className="space-y-4">
+								{chatSessions.slice(0, 3).map((session) => {
+									const messageCount = session.messages
+										? session.messages.length
+										: 0;
+									return (
+										<div
+											key={session.sessionId || session._id}
+											onClick={() => navigate(`/chat/${session.sessionId}`)}
+											className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-pointer group"
+										>
+											<div className="w-12 h-12 bg-gradient-to-br from-[#4f8bff]/20 to-[#4f8bff]/10 rounded-xl flex items-center justify-center">
+												<span className="text-xl">💬</span>
+											</div>
+											<div className="flex-1 min-w-0">
+												<div className="text-white font-medium truncate">
+													{session.title || "Untitled Chat"}
+												</div>
+												<div className="text-gray-400 text-sm">
+													{new Date(session.createdAt).toLocaleDateString()}
+												</div>
+											</div>
+											<div className="text-gray-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+												{messageCount} messages
+											</div>
+										</div>
+									);
+								})}
+							</div>
+						) : (
+							<div className="text-center py-8">
+								<div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
+									<span className="text-2xl opacity-50">💬</span>
+								</div>
+								<p className="text-gray-400 mb-4">No chat history yet</p>
+								<button
+									onClick={() => navigate("/chat/new")}
+									className="text-[#ffd859] hover:text-[#ffeb82] transition-colors text-sm"
+								>
+									Start your first chat →
+								</button>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>

@@ -4,6 +4,7 @@ import {
 	isMessageImportant,
 	updateSummary,
 } from "../services/summaryService.js";
+import { updateChatTitle } from "../services/titleService.js";
 import User from "../models/user.model.js";
 import { v4 as uuidv4 } from "uuid";
 
@@ -109,12 +110,24 @@ const saveMessageAndUpdateSummary = async (
 			// Check if we should update the summary (async)
 			const shouldUpdateSummary = await isMessageImportant(query, response);
 			if (shouldUpdateSummary) {
+				const oldSummary = existingSession.summary;
 				existingSession.summary = await updateSummary(
 					existingSession.summary,
 					query,
 					response
 				);
 				existingSession.summaryUpdatedAt = new Date();
+
+				// Update title based on new summary
+				const firstQuestion =
+					existingSession.messages.find((msg) => msg.role === "user")
+						?.content || "";
+				existingSession.title = await updateChatTitle(
+					existingSession.summary,
+					existingSession.title,
+					firstQuestion
+				);
+
 				await user.save(); // Save again after summary update
 			}
 		} else {

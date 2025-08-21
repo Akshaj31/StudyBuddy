@@ -16,19 +16,37 @@ const ChatPage = () => {
 	const [inputValue, setInputValue] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [currentSessionId, setCurrentSessionId] = useState(null);
+	const [chatSessions, setChatSessions] = useState([]);
+	const [loadingChats, setLoadingChats] = useState(true);
 	const messagesEndRef = useRef(null);
 	const inputRef = useRef(null);
-	const initializationRef = useRef(false);
+
+	// Fetch chat sessions for sidebar
+	const fetchChatSessions = useCallback(async () => {
+		if (!authenticated) return;
+
+		try {
+			setLoadingChats(true);
+			const response = await queryAPI.getChatSessions();
+			const result = await handleAPIError(response);
+			setChatSessions(result.sessions || []);
+		} catch (error) {
+			console.error("Error fetching chat sessions:", error);
+			setChatSessions([]);
+		} finally {
+			setLoadingChats(false);
+		}
+	}, [authenticated]);
+
+	// Load chat sessions when component mounts
+	useEffect(() => {
+		fetchChatSessions();
+	}, [fetchChatSessions]);
 
 	// Initialize chat based on URL and route
 	useEffect(() => {
-		// Prevent multiple initializations using ref
-		if (initializationRef.current) return;
-
 		const initializeChat = async () => {
 			try {
-				initializationRef.current = true; // Set flag immediately
-
 				const { initialMessage, uploadedDocuments } = location.state || {};
 				const isNewChat =
 					window.location.pathname === "/chat/new" ||
@@ -37,11 +55,16 @@ const ChatPage = () => {
 				if (urlSessionId && urlSessionId !== "new") {
 					// Load existing chat session
 					try {
+						console.log("🔍 Loading chat session:", urlSessionId);
 						const response = await queryAPI.getChatSession(urlSessionId);
 						const result = await handleAPIError(response);
 
 						// Load messages from the session
 						const sessionMessages = result.messages || [];
+						console.log("🔍 Loaded messages:", sessionMessages.length);
+						
+						// Set flag to prevent auto-scroll when loading existing chat
+						isLoadingExistingChat.current = true;
 						setMessages(sessionMessages);
 						setCurrentSessionId(urlSessionId);
 					} catch (error) {
@@ -60,6 +83,8 @@ const ChatPage = () => {
 						timestamp: new Date(),
 					};
 
+					// Reset scroll behavior for new chat
+					shouldAutoScroll.current = true;
 					setMessages([welcomeMessage]);
 
 					// If there's an initial message from dashboard, send it automatically
@@ -126,9 +151,37 @@ const ChatPage = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	};
 
+	// Scroll behavior management
+	const prevMessagesLength = useRef(0);
+	const isLoadingExistingChat = useRef(false);
+	const shouldAutoScroll = useRef(true);
+	
 	useEffect(() => {
-		scrollToBottom();
+		// Don't auto-scroll when loading an existing chat
+		if (isLoadingExistingChat.current) {
+			isLoadingExistingChat.current = false;
+			shouldAutoScroll.current = false;
+			prevMessagesLength.current = messages.length;
+			return;
+		}
+		
+		// Only scroll if new messages were added and auto-scroll is enabled
+		if (messages.length > prevMessagesLength.current && shouldAutoScroll.current) {
+			// Use setTimeout to ensure DOM is updated
+			setTimeout(() => {
+				scrollToBottom();
+			}, 100);
+		}
+		
+		prevMessagesLength.current = messages.length;
 	}, [messages]);
+
+	// Enable auto-scroll when user scrolls near bottom
+	const handleScroll = (e) => {
+		const { scrollTop, scrollHeight, clientHeight } = e.target;
+		const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+		shouldAutoScroll.current = isNearBottom;
+	};
 
 	const sendMessage = useCallback(
 		async (messageText = inputValue) => {
@@ -234,147 +287,178 @@ const ChatPage = () => {
 	}
 
 	return (
-		<div className="flex h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+		<div className="fixed inset-0 flex overflow-hidden">
 			{/* Sidebar */}
-			<div className="w-72 bg-white/[0.02] backdrop-blur-xl border-r border-white/10 flex flex-col relative">
-				<div className="absolute inset-0 bg-gradient-to-b from-[#ffd859]/5 via-transparent to-[#4f8bff]/5 pointer-events-none" />
-
+			<div className="w-64 bg-black/30 backdrop-blur-sm border-r border-white/10 flex flex-col relative h-full border-light-gradient">
 				{/* Logo Section */}
-				<div className="relative p-8 border-b border-white/10">
-					<div className="flex items-center gap-4">
-						<div className="relative">
-							<div className="w-12 h-12 bg-gradient-to-br from-[#ffd859] to-[#ffeb82] rounded-2xl flex items-center justify-center shadow-lg shadow-[#ffd859]/25">
-								<span className="text-black font-bold text-xl">📚</span>
-							</div>
-							<div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900"></div>
+				<div className="relative p-6 border-b border-white/10 flex-shrink-0">
+					<div className="flex items-center gap-3">
+						<div className="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg flex items-center justify-center">
+							<span className="text-gray-300 text-sm">📚</span>
 						</div>
 						<div>
-							<h1 className="text-white font-bold text-2xl">StudyBuddy</h1>
-							<p className="text-gray-400 text-sm">AI Chat Assistant</p>
+							<h1 className="text-gray-100 font-medium text-base">StudyBuddy</h1>
 						</div>
 					</div>
 				</div>
 
 				{/* Navigation */}
-				<nav className="flex-1 p-6 relative">
-					<ul className="space-y-3">
-						<li>
-							<button
-								onClick={() => navigate("/dashboard")}
-								className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all duration-300 group relative overflow-hidden text-gray-300 hover:bg-white/5 hover:text-white hover:border-white/20 border border-transparent"
-							>
-								<span className="text-xl relative z-10">📊</span>
-								<span className="font-medium relative z-10">
-									← Back to Dashboard
-								</span>
-							</button>
-						</li>
-						<li>
-							<button
-								onClick={() => navigate("/chat/new")}
-								className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all duration-300 group relative overflow-hidden text-gray-300 hover:bg-white/5 hover:text-white hover:border-white/20 border border-transparent"
-							>
-								<span className="text-xl relative z-10">💬</span>
-								<span className="font-medium relative z-10">New Chat</span>
-							</button>
-						</li>
-						<li>
-							<button
-								onClick={clearChat}
-								className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all duration-300 group relative overflow-hidden text-gray-300 hover:bg-white/5 hover:text-white hover:border-white/20 border border-transparent"
-							>
-								<span className="text-xl relative z-10">🗑️</span>
-								<span className="font-medium relative z-10">Clear Chat</span>
-							</button>
-						</li>
-					</ul>
+				<nav className="flex-1 p-6 relative flex flex-col min-h-0">
+					{/* Quick Actions */}
+					<div className="space-y-2 mb-6 flex-shrink-0">
+						<button
+							onClick={() => navigate("/dashboard")}
+							className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 text-gray-400 hover:bg-gray-800/30 hover:text-gray-200"
+						>
+							<span className="text-sm">←</span>
+							<span className="text-sm font-medium">Dashboard</span>
+						</button>
+						<button
+							onClick={() => navigate("/chat/new")}
+							className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 text-gray-400 hover:bg-gray-800/30 hover:text-gray-200"
+						>
+							<span className="text-sm">+</span>
+							<span className="text-sm font-medium">New Chat</span>
+						</button>
+						<button
+							onClick={clearChat}
+							className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 text-gray-400 hover:bg-gray-800/30 hover:text-gray-200"
+						>
+							<span className="text-sm">×</span>
+							<span className="text-sm font-medium">Clear</span>
+						</button>
+					</div>
+
+					{/* Chat History */}
+					<div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+						<div className="flex items-center justify-between mb-4 flex-shrink-0">
+							<h3 className="text-gray-300 font-medium text-sm">Chats</h3>
+							<span className="text-xs text-gray-500">{chatSessions.length}</span>
+						</div>
+						
+						<div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+							{loadingChats ? (
+								<div className="space-y-3">
+									{[1, 2, 3, 4, 5].map((i) => (
+										<div key={i} className="animate-pulse flex gap-3 p-3 bg-white/5 rounded-xl">
+											<div className="w-8 h-8 bg-white/10 rounded-lg"></div>
+											<div className="flex-1 space-y-2">
+												<div className="h-3 bg-white/10 rounded w-3/4"></div>
+												<div className="h-2 bg-white/10 rounded w-1/2"></div>
+											</div>
+										</div>
+									))}
+								</div>
+							) : chatSessions.length > 0 ? (
+								chatSessions.map((session) => {
+									const isActive = session.sessionId === currentSessionId;
+									const messageCount = session.messages ? session.messages.length : 0;
+									
+									return (
+										<button
+											type="button"
+											key={session.sessionId}
+											onClick={(e) => {
+												e.preventDefault();
+												e.stopPropagation();
+												console.log("🔍 Clicking chat session:", session.sessionId);
+												console.log("🔍 Current sessionId:", currentSessionId);
+												
+												// Add small delay to ensure click is registered
+												setTimeout(() => {
+													navigate(`/chat/${session.sessionId}`);
+												}, 50);
+											}}
+											className={`w-full flex items-center gap-2 p-3 rounded-md text-left transition-all duration-200 ${
+												isActive
+													? "bg-gray-800/50 text-gray-100"
+													: "text-gray-400 hover:bg-gray-800/30 hover:text-gray-200"
+											}`}
+										>
+											<div className="flex-1 min-w-0">
+												<div className="font-medium truncate text-sm leading-5">
+													{session.title || "Untitled Chat"}
+												</div>
+												<div className="text-xs opacity-60 mt-0.5">
+													{messageCount} msgs
+												</div>
+											</div>
+											{isActive && (
+												<div className="w-2 h-2 bg-[#ffd859] rounded-full"></div>
+											)}
+										</button>
+									);
+								})
+							) : (
+								<div className="text-center py-8">
+									<div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-3">
+										<span className="text-2xl opacity-50">💬</span>
+									</div>
+									<p className="text-gray-400 text-sm">No chat history yet</p>
+								</div>
+							)}
+						</div>
+					</div>
 				</nav>
 
 				{/* User Profile */}
 				<div className="relative p-6 border-t border-white/10">
-					<div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-						<div className="flex items-center gap-4 mb-4">
-							<div className="relative">
-								<div className="w-12 h-12 bg-gradient-to-br from-[#ffd859] to-[#ffeb82] rounded-xl flex items-center justify-center font-bold text-black text-lg shadow-lg shadow-[#ffd859]/25">
-									{user?.username?.charAt(0)?.toUpperCase() || "U"}
-								</div>
-								<div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900"></div>
-							</div>
-							<div className="flex-1 min-w-0">
-								<div className="text-white font-semibold truncate">
-									{user?.username || "User"}
-								</div>
-								<div className="text-gray-400 text-sm truncate">
-									{user?.email || "user@example.com"}
-								</div>
+					<div className="flex items-center gap-3 mb-4">
+						<div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center text-gray-300 text-sm font-medium">
+							{user?.username?.charAt(0)?.toUpperCase() || "U"}
+						</div>
+						<div className="flex-1 min-w-0">
+							<div className="text-gray-200 text-sm font-medium truncate">
+								{user?.username || "User"}
 							</div>
 						</div>
-
-						<button
-							onClick={handleLogout}
-							className="w-full bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 rounded-xl py-3 px-4 text-red-300 hover:text-red-200 font-medium transition-all duration-300 flex items-center justify-center gap-2 group"
-						>
-							<span className="text-lg">🚪</span>
-							<span>Logout</span>
-						</button>
 					</div>
+
+					<button
+						onClick={handleLogout}
+						className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 rounded-lg py-2.5 px-4 text-gray-400 hover:text-gray-200 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+					>
+						<span>Logout</span>
+					</button>
 				</div>
 			</div>
 
 			{/* Main Chat Area */}
-			<div className="flex-1 flex flex-col">
+			<div className="flex-1 flex flex-col h-full overflow-hidden">
 				{/* Chat Header */}
-				<div className="bg-white/[0.03] backdrop-blur-xl border-b border-white/10 p-6">
+				<div className="bg-black/20 backdrop-blur-sm border-b border-white/10 p-4 flex-shrink-0">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center space-x-3">
-							<div className="w-10 h-10 bg-gradient-to-br from-[#ffd859] to-[#ffed95] rounded-full flex items-center justify-center">
-								<svg
-									className="w-5 h-5 text-slate-900"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-									/>
-								</svg>
-							</div>
 							<div>
-								<h3 className="text-white font-semibold">StudyBuddy AI Chat</h3>
-								<p className="text-slate-400 text-sm">
-									{currentSessionId
-										? `Session active`
-										: "Ready to help you learn"}
-								</p>
+								<h3 className="text-gray-200 font-medium text-base">Chat</h3>
 							</div>
 						</div>
 						<div className="flex items-center space-x-2">
-							<div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-							<span className="text-green-400 text-sm">Online</span>
+							<span className="text-green-400 text-xs">●</span>
+							<span className="text-gray-400 text-xs font-medium">Online</span>
 						</div>
 					</div>
 				</div>
 
 				{/* Messages Container */}
-				<div className="flex-1 overflow-y-auto p-6 space-y-4">
-					{messages.map((message, index) => (
-						<div
-							key={index}
-							className={`flex ${
-								message.role === "user" ? "justify-end" : "justify-start"
-							}`}
-						>
+				<div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+					<div className="flex-1 overflow-y-auto p-6 min-h-0" onScroll={handleScroll}>
+						<div className="space-y-4">
+							{messages.map((message, index) => (
+							<div
+								key={index}
+								className={`flex ${
+									message.role === "user" ? "justify-end" : "justify-start"
+								}`}
+							>
 							<div
 								className={`max-w-[80%] ${
 									message.role === "user"
-										? "bg-[#ffd859] text-slate-900"
+										? "bg-gray-700 text-gray-100"
 										: message.isError
-										? "bg-red-900/50 text-red-200 border border-red-700/50"
-										: "bg-slate-800 text-white border border-slate-700"
-								} rounded-lg p-4 shadow-lg`}
+										? "bg-red-900/30 text-red-300 border border-red-800/50"
+										: "bg-gray-800/50 text-gray-200"
+								} rounded-lg p-4 border-light-gradient`}
 							>
 								<div className="text-sm leading-relaxed">
 									{message.role === "assistant" ? (
@@ -384,10 +468,7 @@ const ChatPage = () => {
 												components={{
 													// Fun and engaging styling for students
 													p: (props) => (
-														<p
-															className="mb-4 leading-relaxed text-gray-100"
-															{...props}
-														/>
+														<p className="mb-3 text-gray-200 leading-relaxed text-sm" {...props} />
 													),
 													h1: (props) => (
 														<h1
@@ -534,42 +615,32 @@ const ChatPage = () => {
 					)}
 
 					<div ref={messagesEndRef} />
+						</div>
+					</div>
 				</div>
 
 				{/* Input Form */}
-				<div className="bg-white/[0.03] backdrop-blur-xl border-t border-white/10 p-6">
-					<div className="flex space-x-4">
+				<div className="bg-black/20 backdrop-blur-sm border-t border-white/10 p-6 flex-shrink-0">
+					<div className="flex space-x-3">
 						<input
 							ref={inputRef}
 							type="text"
 							value={inputValue}
 							onChange={(e) => setInputValue(e.target.value)}
 							onKeyPress={handleKeyPress}
-							placeholder="Continue the conversation..."
-							className="flex-1 bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#ffd859] focus:border-transparent"
+							placeholder="Type a message..."
+							className="flex-1 bg-gray-800/50 border border-gray-700/50 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-600 focus:border-gray-600 text-sm border-light-gradient"
 							disabled={isLoading}
 						/>
 						<button
 							onClick={() => sendMessage()}
 							disabled={!inputValue.trim() || isLoading}
-							className="px-6 py-3 bg-gradient-to-r from-[#ffd859] to-[#ffed95] text-slate-900 font-medium rounded-xl hover:shadow-lg hover:shadow-[#ffd859]/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+							className="px-5 py-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm font-medium"
 						>
 							{isLoading ? (
-								<div className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+								<div className="w-4 h-4 border border-gray-400 border-t-transparent rounded-full animate-spin"></div>
 							) : (
-								<svg
-									className="w-4 h-4"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-									/>
-								</svg>
+								"Send"
 							)}
 							<span>Send</span>
 						</button>

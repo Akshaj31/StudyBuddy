@@ -72,17 +72,17 @@ const Hero = () => {
 					</div>
 				)}
 				<div className="flex flex-col md:w-[60%] gap-10 text-center md:text-left">
-					<h1 className="hero-heading text-5xl md:text-7xl font-extrabold tracking-tight leading-snug text-white">
+					<h1 className="hero-heading text-4xl md:text-6xl font-extrabold tracking-tight leading-snug text-white">
 						<span className="text-[#4f8bff]">Ace Every Subject</span> with Your
 						AI-Powered <span className="text-[#ffd859]">Study Partner</span>
 					</h1>
-					<p className="hero-subtext text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto md:mx-0">
+					<p className="hero-subtext text-lg md:text-xl text-gray-300 max-w-3xl mx-auto md:mx-0">
 						Smarter notes. Faster revision. Real-time doubt-solving. Learn
 						effortlessly, anytime.
 					</p>
 					<div className="hero-buttons flex justify-center md:justify-start gap-5 mt-8">
 						<button
-							className="text-black bg-[#ffd859] px-8 py-4 rounded-xl text-lg font-semibold hover:bg-yellow-400 transition-colors shadow-lg hover:shadow-yellow-500/40 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+							className="text-black bg-[#ffd859] px-8 py-4 rounded-xl text-base font-semibold hover:bg-yellow-400 transition-colors shadow-lg hover:shadow-yellow-500/40 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 							onClick={handleGetStarted}
 							disabled={loading}
 						>
@@ -93,7 +93,7 @@ const Hero = () => {
 								: "🚀 Try Now for Free"}
 						</button>
 						<button
-							className="text-white border border-gray-500 px-8 py-4 rounded-xl text-lg font-medium hover:bg-white/10 transition-colors cursor-pointer"
+							className="text-white border border-gray-500 px-8 py-4 rounded-xl text-base font-medium hover:bg-white/10 transition-colors cursor-pointer"
 							onClick={scrollToFeatures}
 						>
 							Learn More

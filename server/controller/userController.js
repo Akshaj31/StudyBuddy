@@ -342,3 +342,47 @@ export const deleteChatSession = async (req, res) => {
 		return res.status(500).json({ error: "Failed to delete chat session" });
 	}
 };
+
+// Get user's uploaded documents (simple projection)
+export const getUserDocuments = async (req, res) => {
+	try {
+		const user = req.user; // populated by verifyToken middleware
+		if (!user) {
+			return res.status(404).json({ error: "User not found" });
+		}
+		return res.status(200).json({ documents: user.documents || [] });
+	} catch (error) {
+		console.error("Error getting user documents:", error);
+		return res.status(500).json({ error: "Failed to get documents" });
+	}
+};
+
+// Get aggregated dashboard data
+export const getDashboardData = async (req, res) => {
+	try {
+		const user = req.user;
+		if (!user) {
+			return res.status(404).json({ error: "User not found" });
+		}
+
+		// Basic aggregation from stored fields; can be expanded with real calculations
+		const data = {
+			stats: {
+				totalStudyHours: user.totalStudyHours || 0,
+				subjectsMastered: user.subjectsMastered || 0,
+				averageScore: user.averageScore || 0,
+				studyStreakDays: user.studyStreakDays || 0,
+			},
+			recentActivity: (user.recentActivity || [])
+				.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+				.slice(0, 10),
+			documentsCount: (user.documents || []).length,
+			chatSessionsCount: (user.chatSessions || []).length,
+		};
+
+		return res.status(200).json(data);
+	} catch (error) {
+		console.error("Error getting dashboard data:", error);
+		return res.status(500).json({ error: "Failed to get dashboard data" });
+	}
+};

@@ -1,15 +1,24 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { useNavigate } from "react-router-dom";
-import { documentAPI, queryAPI, handleAPIError } from "../services/api.js";
+import {
+	documentAPI,
+	handleAPIError,
+	dashboardAPI,
+	queryAPI,
+} from "../services/api.js";
 
 const Dashboard = () => {
 	const [activeSection, setActiveSection] = useState("Dashboard");
 	const [aiInput, setAiInput] = useState("");
 	const [attachedFiles, setAttachedFiles] = useState([]);
 	const [uploading, setUploading] = useState(false);
-	const [chatSessions, setChatSessions] = useState([]);
+	const [stats, setStats] = useState(null);
+	const [recentActivity, setRecentActivity] = useState([]);
+	const [loadingDashboard, setLoadingDashboard] = useState(true);
+	const [recentChats, setRecentChats] = useState([]);
 	const [loadingChats, setLoadingChats] = useState(true);
+	const [showChats, setShowChats] = useState(false);
 
 	// Use the authentication hook
 	const { user, authenticated, loading, logout } = useAuth();
@@ -83,124 +92,10 @@ const Dashboard = () => {
 		}
 	}, [user]);
 
-	// Fetch chat sessions
-	const fetchChatSessions = useCallback(async () => {
-		if (!authenticated) return;
-
-		try {
-			setLoadingChats(true);
-			console.log("🔍 Fetching chat sessions...");
-			const response = await queryAPI.getChatSessions();
-			const result = await handleAPIError(response);
-
-			console.log("🔍 Chat sessions API response:", result);
-			console.log("🔍 Sessions array:", result.sessions);
-
-			setChatSessions(result.sessions || []);
-		} catch (error) {
-			console.error("❌ Error fetching chat sessions:", error);
-			setChatSessions([]);
-		} finally {
-			setLoadingChats(false);
-		}
-	}, [authenticated]);
-
-	useEffect(() => {
-		fetchChatSessions();
-	}, [fetchChatSessions]);
-
-	// Show loading state while checking authentication
-	if (loading) {
-		return (
-			<div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-				<div className="text-center">
-					<div className="w-16 h-16 border-4 border-[#ffd859] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-					<div className="text-white text-xl">Loading your dashboard...</div>
-				</div>
-			</div>
-		);
-	}
-
-	// If not authenticated, the useAuth hook will handle redirection
-	if (!authenticated) {
-		return null;
-	}
-
-	const subjects = [
-		{
-			name: "Mathematics",
-			icon: "🔢",
-			quizAvg: 8.5,
-			totalQuizzes: 12,
-			lastActive: "2 hours ago",
-			progress: 85,
-			color: "from-purple-500/30 via-blue-500/20 to-indigo-500/30",
-			borderColor: "border-purple-400/40",
-			shadowColor: "shadow-purple-500/20",
-		},
-		{
-			name: "Physics",
-			icon: "⚛️",
-			quizAvg: 7.2,
-			totalQuizzes: 8,
-			lastActive: "1 day ago",
-			progress: 62,
-			color: "from-emerald-500/30 via-teal-500/20 to-cyan-500/30",
-			borderColor: "border-emerald-400/40",
-			shadowColor: "shadow-emerald-500/20",
-		},
-		{
-			name: "Chemistry",
-			icon: "🧪",
-			quizAvg: 9.1,
-			totalQuizzes: 15,
-			lastActive: "3 hours ago",
-			progress: 92,
-			color: "from-rose-500/30 via-pink-500/20 to-red-500/30",
-			borderColor: "border-rose-400/40",
-			shadowColor: "shadow-rose-500/20",
-		},
-		{
-			name: "History",
-			icon: "📜",
-			quizAvg: 6.8,
-			totalQuizzes: 6,
-			lastActive: "5 days ago",
-			progress: 45,
-			color: "from-amber-500/30 via-orange-500/20 to-yellow-500/30",
-			borderColor: "border-amber-400/40",
-			shadowColor: "shadow-amber-500/20",
-		},
-		{
-			name: "Literature",
-			icon: "📖",
-			quizAvg: null,
-			totalQuizzes: 0,
-			lastActive: "Never",
-			progress: 0,
-			color: "from-slate-500/20 via-gray-500/10 to-slate-600/20",
-			borderColor: "border-slate-400/30",
-			shadowColor: "shadow-slate-500/10",
-		},
-		{
-			name: "Biology",
-			icon: "🧬",
-			quizAvg: null,
-			totalQuizzes: 0,
-			lastActive: "Never",
-			progress: 0,
-			color: "from-slate-500/20 via-gray-500/10 to-slate-600/20",
-			borderColor: "border-slate-400/30",
-			shadowColor: "shadow-slate-500/10",
-		},
-	];
-
 	const sidebarItems = [
 		{ name: "Dashboard", icon: "📊", path: "/dashboard" },
-		{ name: "Subjects", icon: "📚", path: "/subjects" },
-		{ name: "AI Tutor", icon: "🤖", path: "/ai-tutor" },
+		{ name: "AI Tutor", icon: "🤖", path: "/chat/new" },
 		{ name: "Progress", icon: "📈", path: "/progress" },
-		{ name: "Calendar", icon: "📅", path: "/calendar" },
 		{ name: "Settings", icon: "⚙️", path: "/settings" },
 	];
 
@@ -211,213 +106,298 @@ const Dashboard = () => {
 		}
 	};
 
-	const stats = [
-		{
-			label: "Total Study Hours",
-			value: "127",
-			suffix: "hrs",
-			icon: "⏱️",
-			color: "text-[#ffd859]",
-		},
-		{
-			label: "Subjects Mastered",
-			value: "3",
-			suffix: "/6",
-			icon: "🎯",
-			color: "text-emerald-400",
-		},
-		{
-			label: "Average Score",
-			value: "8.2",
-			suffix: "/10",
-			icon: "⭐",
-			color: "text-blue-400",
-		},
-		{
-			label: "Study Streak",
-			value: "12",
-			suffix: "days",
-			icon: "🔥",
-			color: "text-orange-400",
-		},
-	];
+	// Fetch dashboard data
+	useEffect(() => {
+		let isMounted = true;
+		const fetchDashboard = async () => {
+			try {
+				setLoadingDashboard(true);
+				const response = await dashboardAPI.getDashboard();
+				const data = await handleAPIError(response);
+				if (!isMounted) return;
+				setStats([
+					{
+						label: "Total Study Hours",
+						value: data.stats.totalStudyHours?.toString() || "0",
+						suffix: "hrs",
+						icon: "⏱️",
+						color: "text-[#ffd859]",
+					},
+					{
+						label: "Subjects Mastered",
+						value: data.stats.subjectsMastered?.toString() || "0",
+						suffix: "",
+						icon: "🎯",
+						color: "text-emerald-400",
+					},
+					{
+						label: "Average Score",
+						value: data.stats.averageScore?.toString() || "0",
+						suffix: "/10",
+						icon: "⭐",
+						color: "text-blue-400",
+					},
+					{
+						label: "Study Streak",
+						value: data.stats.studyStreakDays?.toString() || "0",
+						suffix: "days",
+						icon: "🔥",
+						color: "text-orange-400",
+					},
+				]);
 
-	const recentActivity = [
-		{
-			subject: "Mathematics",
-			action: "Completed Quiz",
-			score: "9/10",
-			time: "2 hours ago",
-			icon: "✅",
-		},
-		{
-			subject: "Chemistry",
-			action: "Studied Notes",
-			score: null,
-			time: "3 hours ago",
-			icon: "📝",
-		},
-		{
-			subject: "Physics",
-			action: "Watched Video",
-			score: null,
-			time: "1 day ago",
-			icon: "🎥",
-		},
-	];
+				setRecentActivity(
+					(data.recentActivity || []).map((a) => ({
+						icon: a.icon || "✅",
+						// Converting to display fields similar to previous structure
+						subject: a.description || "Activity",
+						time: timeAgo(a.timestamp),
+					}))
+				);
+			} catch (e) {
+				console.error("Failed to load dashboard:", e);
+			} finally {
+				if (isMounted) setLoadingDashboard(false);
+			}
+		};
+		fetchDashboard();
+		return () => {
+			isMounted = false;
+		};
+	}, []);
+
+	// Fetch recent chats (last 5)
+	useEffect(() => {
+		let active = true;
+		const fetchChats = async () => {
+			if (!authenticated) return;
+			try {
+				setLoadingChats(true);
+				const response = await queryAPI.getChatSessions();
+				const data = await handleAPIError(response);
+				if (!active) return;
+				const sessions = (data.sessions || [])
+					.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+					.slice(0, 5)
+					.map((s) => ({
+						id: s.sessionId,
+						title: s.title || "Untitled Chat",
+						updatedAt: s.updatedAt,
+					}));
+				setRecentChats(sessions);
+			} catch (e) {
+				console.error("Failed to load chat sessions", e);
+				setRecentChats([]);
+			} finally {
+				if (active) setLoadingChats(false);
+			}
+		};
+		fetchChats();
+		return () => {
+			active = false;
+		};
+	}, [authenticated]);
+
+	const timeAgo = (date) => {
+		if (!date) return "";
+		const d = new Date(date);
+		const diff = Date.now() - d.getTime();
+		const mins = Math.floor(diff / 60000);
+		if (mins < 60) return `${mins}m ago`;
+		const hrs = Math.floor(mins / 60);
+		if (hrs < 24) return `${hrs}h ago`;
+		const days = Math.floor(hrs / 24);
+		return `${days}d ago`;
+	};
+
+	// Unified early return section (after all hooks to satisfy rules of hooks)
+	if (loading || loadingDashboard) {
+		return (
+			<div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+				<div className="text-center">
+					<div className="w-16 h-16 border-4 border-[#ffd859] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+					<div className="text-white text-lg">
+						{loading ? "Authenticating..." : "Loading your dashboard..."}
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	if (!authenticated) return null;
 
 	return (
 		<div className="flex h-screen">
 			{/* Minimal Sidebar */}
-			<div className="w-72 bg-white/[0.02] backdrop-blur-xl border-r border-white/10 flex flex-col">
+			<div className="w-64 bg-black/30 backdrop-blur-sm border-r border-white/10 flex flex-col border-light-gradient">
 				{/* Logo Section */}
-				<div className="p-8 border-b border-white/10">
-					<div className="flex items-center gap-4">
-						<div className="relative">
-							<div className="w-12 h-12 bg-gradient-to-br from-[#ffd859] to-[#ffeb82] rounded-2xl flex items-center justify-center shadow-lg shadow-[#ffd859]/25">
-								<span className="text-black font-bold text-xl">📚</span>
-							</div>
-							<div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900"></div>
+				<div className="p-6 border-b border-white/10">
+					<div className="flex items-center gap-3">
+						<div className="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg flex items-center justify-center">
+							<span className="text-gray-300 text-base">📚</span>
 						</div>
 						<div>
-							<h1 className="text-white font-bold text-2xl">StudyBuddy</h1>
-							<p className="text-gray-400 text-sm">AI-Powered Learning</p>
+							<h1 className="text-gray-100 font-medium text-lg">StudyBuddy</h1>
 						</div>
 					</div>
 				</div>
 
 				{/* Navigation */}
 				<nav className="flex-1 p-6">
-					<ul className="space-y-3">
+					<ul className="space-y-2">
 						{sidebarItems.map((item) => (
 							<li key={item.name}>
 								<button
-									onClick={() => setActiveSection(item.name)}
-									className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all duration-300 group relative overflow-hidden ${
+									onClick={() => {
+										setActiveSection(item.name);
+										if (item.path) navigate(item.path);
+									}}
+									className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
 										item.name === activeSection
-											? "bg-gradient-to-r from-[#ffd859]/20 to-[#ffd859]/10 text-[#ffd859] border border-[#ffd859]/30 shadow-lg shadow-[#ffd859]/10"
-											: "text-gray-300 hover:bg-white/5 hover:text-white hover:border-white/20 border border-transparent"
+											? "bg-gray-800/50 text-gray-100"
+											: "text-gray-400 hover:bg-gray-800/30 hover:text-gray-200"
 									}`}
 								>
-									{item.name === activeSection && (
-										<div className="absolute inset-0 bg-gradient-to-r from-[#ffd859]/10 to-transparent rounded-2xl" />
-									)}
-									<span className="text-xl relative z-10">{item.icon}</span>
-									<span className="font-medium relative z-10">{item.name}</span>
-									{item.name === activeSection && (
-										<div className="absolute right-4 w-2 h-2 bg-[#ffd859] rounded-full" />
-									)}
+									<span className="text-base">{item.icon}</span>
+									<span className="text-base font-medium">{item.name}</span>
 								</button>
 							</li>
 						))}
+
+						<li className="pt-2">
+							<button
+								onClick={() => setShowChats((s) => !s)}
+								className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 ${
+									showChats
+										? "bg-gray-800/50 text-gray-100"
+										: "text-gray-400 hover:bg-gray-800/30 hover:text-gray-200"
+								}`}
+							>
+								<span className="flex items-center gap-3">
+									<span className="text-base">💬</span>
+									<span className="text-base font-medium">Recent Chats</span>
+								</span>
+								<span className="text-xs text-gray-400">
+									{showChats ? "▾" : "▸"}
+								</span>
+							</button>
+
+							{showChats && (
+								<div className="mt-2 space-y-1">
+									{loadingChats ? (
+										<div className="text-gray-500 text-sm px-2 py-1">
+											Loading...
+										</div>
+									) : recentChats.length === 0 ? (
+										<div className="text-gray-500 text-sm px-2 py-1">
+											No chats yet
+										</div>
+									) : (
+										recentChats.map((chat) => (
+											<button
+												key={chat.id}
+												onClick={() => navigate(`/chat/${chat.id}`)}
+												className="w-full text-left px-3 py-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 text-gray-300 hover:text-white transition-colors group"
+											>
+												<div className="flex items-center justify-between gap-2">
+													<span className="truncate text-sm group-hover:text-white">
+														{chat.title}
+													</span>
+													<span className="text-[10px] text-gray-500 whitespace-nowrap">
+														{timeAgo(chat.updatedAt)}
+													</span>
+												</div>
+											</button>
+										))
+									)}
+									{!loadingChats && recentChats.length > 0 && (
+										<button
+											onClick={() => navigate("/chat")}
+											className="w-full mt-1 text-center text-xs px-3 py-1.5 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 text-gray-400 hover:text-gray-200 transition-colors"
+										>
+											View more
+										</button>
+									)}
+								</div>
+							)}
+						</li>
 					</ul>
 				</nav>
 
-				{/* Enhanced User Profile */}
+				{/* User Profile */}
 				<div className="relative p-6 border-t border-white/10">
-					<div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-						<div className="flex items-center gap-4 mb-4">
-							<div className="relative">
-								<div className="w-12 h-12 bg-gradient-to-br from-[#ffd859] to-[#ffeb82] rounded-xl flex items-center justify-center font-bold text-black text-lg shadow-lg shadow-[#ffd859]/25">
-									{user?.username?.charAt(0)?.toUpperCase() || "U"}
-								</div>
-								<div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900"></div>
-							</div>
-							<div className="flex-1 min-w-0">
-								<div className="text-white font-semibold truncate">
-									{user?.username || "User"}
-								</div>
-								<div className="text-gray-400 text-sm truncate">
-									{user?.email || "user@example.com"}
-								</div>
+					<div className="flex items-center gap-3 mb-4">
+						<div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center text-gray-300 text-base font-medium">
+							{user?.username?.charAt(0)?.toUpperCase() || "U"}
+						</div>
+						<div className="flex-1 min-w-0">
+							<div className="text-gray-200 text-base font-medium truncate">
+								{user?.username || "User"}
 							</div>
 						</div>
-
-						{/* Logout Button */}
-						<button
-							onClick={handleLogout}
-							className="w-full bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/50 rounded-xl py-3 px-4 text-red-300 hover:text-red-200 font-medium transition-all duration-300 flex items-center justify-center gap-2 group"
-						>
-							<span className="text-lg">🚪</span>
-							<span>Logout</span>
-							<div className="w-0 group-hover:w-2 h-2 bg-red-400 rounded-full transition-all duration-300"></div>
-						</button>
 					</div>
+
+					<button
+						onClick={handleLogout}
+						className="w-full bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700/50 rounded-lg py-2.5 px-4 text-gray-400 hover:text-gray-200 text-base font-medium transition-colors flex items-center justify-center gap-2"
+					>
+						<span>Logout</span>
+					</button>
 				</div>
 			</div>
 
 			{/* Main Content */}
 			<div className="flex-1 overflow-auto bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50">
-				<div className="p-8 space-y-8">
-					{/* Welcome Header */}
-					<div className="flex items-center justify-between">
-						<div>
-							<h1 className="text-4xl font-bold text-white mb-2">
-								Welcome back, {user?.username || "User"}! 👋
-							</h1>
-							<p className="text-gray-400 text-lg">
-								Ready to continue your learning journey?
-							</p>
-							{user?.lastActive && (
-								<p className="text-gray-500 text-sm mt-1">
-									Last active: {new Date(user.lastActive).toLocaleDateString()}
-								</p>
-							)}
-						</div>
-						<div className="text-right">
-							<div className="text-gray-400 text-sm">Today</div>
-							<div className="text-white font-semibold text-lg">
-								{new Date().toLocaleDateString("en-US", {
-									weekday: "long",
-									month: "long",
-									day: "numeric",
-								})}
-							</div>
-							{/* Authentication Status */}
-							<div className="flex items-center gap-2 mt-2">
-								<div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-								<span className="text-green-400 text-xs">Authenticated</span>
-							</div>
-						</div>
+				<div className="p-4 space-y-4">
+					{/* Welcome Header - More Prominent */}
+					<div className="bg-white/[0.02] rounded-2xl p-6 border border-white/5 mb-6">
+						<h1 className="text-3xl font-bold text-white mb-2">
+							Welcome back, {user?.username || "User"}! 👋
+						</h1>
+						<p className="text-gray-300 text-lg">
+							Ready to continue your learning journey?
+						</p>
 					</div>
 
-					{/* Stats Cards */}
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+					{/* Stats Cards - Simplified One Line */}
+					<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
 						{stats.map((stat, index) => (
 							<div
 								key={index}
-								className="bg-white/[0.03] backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 group"
+								className="bg-white/[0.02] backdrop-blur-xl rounded-xl p-3 border border-white/5"
 							>
-								<div className="flex items-center justify-between mb-4">
-									<span className="text-2xl">{stat.icon}</span>
-									<div className={`text-2xl font-bold ${stat.color}`}>
-										{stat.value}
-										<span className="text-gray-400 text-sm ml-1">
-											{stat.suffix}
-										</span>
+								<div className="flex items-center gap-2">
+									<span className="text-lg">{stat.icon}</span>
+									<div>
+										<div className={`text-sm font-bold ${stat.color}`}>
+											{stat.value}
+											<span className="text-gray-500 text-xs ml-1">
+												{stat.suffix}
+											</span>
+										</div>
+										<div className="text-gray-400 text-xs">{stat.label}</div>
 									</div>
 								</div>
-								<div className="text-gray-300 font-medium">{stat.label}</div>
 							</div>
 						))}
 					</div>
 
-					{/* AI Helper Section */}
-					<div className="bg-gradient-to-r from-white/[0.03] to-white/[0.06] backdrop-blur-xl rounded-3xl p-8 border border-white/10 relative overflow-hidden">
-						<div className="absolute top-0 right-0 w-32 h-32 bg-[#ffd859]/10 rounded-full blur-3xl"></div>
-						<div className="absolute bottom-0 left-0 w-24 h-24 bg-[#4f8bff]/10 rounded-full blur-2xl"></div>
+					{/* AI Study Assistant - Main Feature */}
+					<div className="border-light-gradient  backdrop-blur-xl rounded-2xl p-6 border-0 relative overflow-hidden mb-8">
+						<div className="absolute top-0 right-0 w-40 h-40 bg-[#ffd859]/20 rounded-full blur-3xl"></div>
+						<div className="absolute bottom-0 left-0 w-32 h-32 bg-[#4f8bff]/20 rounded-full blur-2xl"></div>
 
 						<div className="relative z-10">
-							<div className="flex items-center gap-3 mb-6">
-								<div className="w-12 h-12 bg-gradient-to-br from-[#ffd859] to-[#ffeb82] rounded-2xl flex items-center justify-center">
+							<div className="flex items-center gap-4 mb-4">
+								<div className="w-14 h-14 bg-gradient-to-br from-[#ffd859] to-[#ffeb82] rounded-2xl flex items-center justify-center shadow-lg">
 									<span className="text-black font-bold text-xl">🤖</span>
 								</div>
 								<div>
-									<h2 className="text-2xl font-bold text-white">
+									<h2 className="text-xl font-bold text-white">
 										AI Study Assistant
 									</h2>
-									<p className="text-gray-400">
-										Ask questions, get explanations, or upload your notes
+									<p className="text-gray-300 text-base">
+										Your personal learning companion
 									</p>
 								</div>
 							</div>
@@ -425,7 +405,7 @@ const Dashboard = () => {
 							{/* Attached Files Display */}
 							{attachedFiles.length > 0 && (
 								<div className="mb-4 space-y-2">
-									<div className="text-sm text-gray-400 mb-2">
+									<div className="text-base text-gray-400 mb-2">
 										Attached files:
 									</div>
 									{attachedFiles.map((file, index) => (
@@ -449,10 +429,10 @@ const Dashboard = () => {
 												</svg>
 											</div>
 											<div className="flex-1 min-w-0">
-												<div className="text-white text-sm font-medium truncate">
+												<div className="text-white text-base font-medium truncate">
 													{file.name}
 												</div>
-												<div className="text-gray-400 text-xs">
+												<div className="text-gray-400 text-sm">
 													{(file.size / 1024 / 1024).toFixed(1)} MB
 												</div>
 											</div>
@@ -479,7 +459,7 @@ const Dashboard = () => {
 								</div>
 							)}
 
-							<div className="space-y-4">
+							<div className="space-y-3">
 								{/* Input with attachment button */}
 								<div className="relative">
 									<div className="flex items-center gap-2">
@@ -494,7 +474,7 @@ const Dashboard = () => {
 														? "Ask about your uploaded files..."
 														: "Ask me anything or upload files to get started... 💡"
 												}
-												className="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-5 text-white placeholder-gray-400 focus:outline-none focus:border-[#ffd859]/50 focus:bg-white/15 transition-all duration-300"
+												className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#ffd859]/50 focus:bg-white/15 transition-all duration-300 text-sm"
 												disabled={uploading}
 											/>
 										</div>
@@ -531,7 +511,7 @@ const Dashboard = () => {
 												(!aiInput.trim() && attachedFiles.length === 0) ||
 												uploading
 											}
-											className="flex-shrink-0 bg-gradient-to-r from-[#ffd859] to-[#ffeb82] hover:from-[#ffeb82] hover:to-[#ffd859] px-6 py-3 rounded-xl text-black font-bold transition-all duration-300 shadow-lg shadow-[#ffd859]/25 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border-light-gradient"
+											className="flex-shrink-0 bg-gradient-to-r from-[#ffd859] to-[#ffeb82] hover:from-[#ffeb82] hover:to-[#ffd859] px-4 py-3 rounded-xl text-black font-semibold transition-all duration-300 shadow-lg shadow-[#ffd859]/25 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border-light-gradient text-sm"
 										>
 											{uploading ? (
 												<div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
@@ -543,10 +523,10 @@ const Dashboard = () => {
 								</div>
 
 								{/* Quick Actions */}
-								<div className="flex gap-3 text-sm">
+								<div className="flex gap-2 text-sm">
 									<button
 										onClick={() => setAiInput("Summarize this document for me")}
-										className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-white transition-all duration-200"
+										className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-white transition-all duration-200"
 									>
 										✨ Summarize
 									</button>
@@ -554,7 +534,7 @@ const Dashboard = () => {
 										onClick={() =>
 											setAiInput("Create study notes from this material")
 										}
-										className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-white transition-all duration-200"
+										className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-white transition-all duration-200"
 									>
 										📝 Study Notes
 									</button>
@@ -562,7 +542,7 @@ const Dashboard = () => {
 										onClick={() =>
 											setAiInput("Generate quiz questions from this content")
 										}
-										className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-white transition-all duration-200"
+										className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-gray-300 hover:text-white transition-all duration-200"
 									>
 										❓ Quiz Me
 									</button>
@@ -571,223 +551,25 @@ const Dashboard = () => {
 						</div>
 					</div>
 
-					{/* Subjects Grid */}
-					<div>
-						<div className="flex items-center justify-between mb-8">
-							<h3 className="text-2xl font-bold text-white">Your Subjects</h3>
-							<button className="bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-6 py-3 text-white font-medium transition-all duration-300 hover:scale-105">
-								+ Add Subject
-							</button>
-						</div>
-
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-							{subjects.map((subject, index) => (
-								<div
-									key={index}
-									className={`bg-gradient-to-br ${subject.color} backdrop-blur-xl rounded-3xl p-6 border ${subject.borderColor} hover:scale-105 transition-all duration-300 cursor-pointer group relative overflow-hidden ${subject.shadowColor} hover:shadow-xl`}
-								>
-									{/* Progress Ring */}
-									<div className="absolute top-4 right-4">
-										<div className="w-16 h-16 relative">
-											<svg
-												className="w-16 h-16 transform -rotate-90"
-												viewBox="0 0 64 64"
-											>
-												<circle
-													cx="32"
-													cy="32"
-													r="28"
-													stroke="white"
-													strokeOpacity="0.1"
-													strokeWidth="4"
-													fill="none"
-												/>
-												<circle
-													cx="32"
-													cy="32"
-													r="28"
-													stroke="#ffd859"
-													strokeWidth="4"
-													fill="none"
-													strokeDasharray={`${2 * Math.PI * 28}`}
-													strokeDashoffset={`${
-														2 * Math.PI * 28 * (1 - subject.progress / 100)
-													}`}
-													className="transition-all duration-500"
-												/>
-											</svg>
-											<div className="absolute inset-0 flex items-center justify-center">
-												<span className="text-white font-bold text-sm">
-													{subject.progress}%
-												</span>
-											</div>
-										</div>
-									</div>
-
-									<div className="mb-4">
-										<div className="flex items-center gap-3 mb-2">
-											<span className="text-3xl">{subject.icon}</span>
-											<h4 className="text-white font-bold text-xl">
-												{subject.name}
-											</h4>
-										</div>
-									</div>
-
-									<div className="space-y-4">
-										{subject.quizAvg ? (
-											<>
-												<div>
-													<div className="text-gray-300 text-sm mb-1">
-														Average Score
-													</div>
-													<div className="text-white font-bold text-2xl">
-														{subject.quizAvg}/10
-													</div>
-												</div>
-												<div>
-													<div className="text-gray-300 text-sm mb-1">
-														Quizzes Completed
-													</div>
-													<div className="text-white font-semibold">
-														{subject.totalQuizzes} quizzes
-													</div>
-												</div>
-											</>
-										) : (
-											<div>
-												<div className="text-gray-300 text-sm mb-1">Status</div>
-												<div className="text-yellow-400 font-semibold">
-													Ready to start
-												</div>
-											</div>
-										)}
-
-										<div>
-											<div className="text-gray-300 text-sm mb-1">
-												Last Active
-											</div>
-											<div className="text-gray-400 text-sm">
-												{subject.lastActive}
-											</div>
-										</div>
-									</div>
-
-									{/* Hover Button */}
-									<div className="mt-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-										<button className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-xl py-3 text-white font-semibold transition-all duration-300">
-											{subject.quizAvg ? "Continue Learning" : "Start Subject"}{" "}
-											→
-										</button>
-									</div>
-								</div>
-							))}
-						</div>
-					</div>
-
-					{/* Recent Activity */}
-					<div className="bg-white/[0.03] backdrop-blur-xl rounded-3xl p-8 border border-white/10">
-						<h3 className="text-2xl font-bold text-white mb-6">
+					{/* Recent Activity - Minimal */}
+					<div className="bg-white/[0.02] backdrop-blur-xl rounded-xl p-4 border border-white/5">
+						<h3 className="text-base font-semibold text-white mb-3">
 							Recent Activity
 						</h3>
-						<div className="space-y-4">
-							{recentActivity.map((activity, index) => (
+						<div className="space-y-2">
+							{recentActivity.slice(0, 2).map((activity, index) => (
 								<div
 									key={index}
-									className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300"
+									className="flex items-center gap-3 p-2 bg-white/5 rounded-lg"
 								>
-									<div className="w-12 h-12 bg-gradient-to-br from-[#ffd859]/20 to-[#ffd859]/10 rounded-xl flex items-center justify-center">
-										<span className="text-xl">{activity.icon}</span>
-									</div>
+									<span className="text-sm">{activity.icon}</span>
 									<div className="flex-1">
-										<div className="text-white font-semibold">
-											{activity.subject}
-										</div>
-										<div className="text-gray-400 text-sm">
-											{activity.action}
-										</div>
+										<div className="text-white text-sm">{activity.subject}</div>
+										<div className="text-gray-500 text-xs">{activity.time}</div>
 									</div>
-									{activity.score && (
-										<div className="text-[#ffd859] font-bold">
-											{activity.score}
-										</div>
-									)}
-									<div className="text-gray-500 text-sm">{activity.time}</div>
 								</div>
 							))}
 						</div>
-					</div>
-
-					{/* Recent Chats */}
-					<div className="bg-white/[0.03] backdrop-blur-xl rounded-3xl p-8 border border-white/10">
-						<div className="flex items-center justify-between mb-6">
-							<h3 className="text-2xl font-bold text-white">Recent Chats</h3>
-							<button
-								onClick={() => navigate("/chat")}
-								className="text-sm text-[#ffd859] hover:text-[#ffeb82] transition-colors"
-							>
-								View All →
-							</button>
-						</div>
-
-						{loadingChats ? (
-							<div className="space-y-4">
-								{[1, 2, 3].map((i) => (
-									<div
-										key={i}
-										className="animate-pulse flex gap-4 p-4 bg-white/5 rounded-2xl"
-									>
-										<div className="w-12 h-12 bg-white/10 rounded-xl"></div>
-										<div className="flex-1 space-y-2">
-											<div className="h-4 bg-white/10 rounded w-3/4"></div>
-											<div className="h-3 bg-white/10 rounded w-1/2"></div>
-										</div>
-									</div>
-								))}
-							</div>
-						) : chatSessions.length > 0 ? (
-							<div className="space-y-4">
-								{chatSessions.slice(0, 3).map((session) => {
-									const messageCount = session.messages
-										? session.messages.length
-										: 0;
-									return (
-										<div
-											key={session.sessionId || session._id}
-											onClick={() => navigate(`/chat/${session.sessionId}`)}
-											className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-pointer group"
-										>
-											<div className="w-12 h-12 bg-gradient-to-br from-[#4f8bff]/20 to-[#4f8bff]/10 rounded-xl flex items-center justify-center">
-												<span className="text-xl">💬</span>
-											</div>
-											<div className="flex-1 min-w-0">
-												<div className="text-white font-medium truncate">
-													{session.title || "Untitled Chat"}
-												</div>
-												<div className="text-gray-400 text-sm">
-													{new Date(session.createdAt).toLocaleDateString()}
-												</div>
-											</div>
-											<div className="text-gray-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-												{messageCount} messages
-											</div>
-										</div>
-									);
-								})}
-							</div>
-						) : (
-							<div className="text-center py-8">
-								<div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
-									<span className="text-2xl opacity-50">💬</span>
-								</div>
-								<p className="text-gray-400 mb-4">No chat history yet</p>
-								<button
-									onClick={() => navigate("/chat/new")}
-									className="text-[#ffd859] hover:text-[#ffeb82] transition-colors text-sm"
-								>
-									Start your first chat →
-								</button>
-							</div>
-						)}
 					</div>
 				</div>
 			</div>

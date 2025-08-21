@@ -125,6 +125,43 @@ const userSchema = new mongoose.Schema({
 			},
 		},
 	],
+	// Dashboard metrics (basic placeholders, can be updated elsewhere in app logic)
+	totalStudyHours: {
+		type: Number,
+		default: 0,
+	},
+	subjectsMastered: {
+		type: Number,
+		default: 0,
+	},
+	averageScore: {
+		type: Number,
+		default: 0,
+	},
+	studyStreakDays: {
+		type: Number,
+		default: 0,
+	},
+	recentActivity: [
+		{
+			type: {
+				type: String,
+				default: "activity",
+			},
+			description: {
+				type: String,
+				default: "",
+			},
+			icon: {
+				type: String,
+				default: "✅",
+			},
+			timestamp: {
+				type: Date,
+				default: Date.now,
+			},
+		},
+	],
 });
 
 const User = mongoose.model("User", userSchema);

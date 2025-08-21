@@ -136,10 +136,7 @@ const Login = () => {
 			<div className="relative w-[500px] max-w-[90vw] p-8 rounded-3xl bg-white/10 backdrop-blur-sm border-light-gradient shadow-2xl">
 				{/* Centered inner form container */}
 				<div className="mx-auto w-[320px]">
-					<h1 className="text-3xl font-bold text-center mb-8 text-white">
-						Welcome Back
-					</h1>
-
+					<h2 className="text-2xl font-bold text-white mb-8">Create Account</h2>{" "}
 					<div className="flex flex-col gap-4 mb-6">
 						<div className="border-light-gradient rounded-xl">
 							<input
@@ -170,7 +167,6 @@ const Login = () => {
 							Forgot Password?
 						</a>
 					</div>
-
 					<div className="flex justify-center mb-6">
 						<button
 							className="w-full bg-[#ffd859] py-4 rounded-xl text-black font-bold text-lg hover:bg-[#ffeb82] transition-all duration-300 cursor-pointer shadow-lg hover:shadow-yellow-500/40 transform hover:scale-[1.02]"
@@ -179,7 +175,6 @@ const Login = () => {
 							Sign In
 						</button>
 					</div>
-
 					<div className="flex items-center my-6">
 						<hr className="flex-grow border-t border-white/30" />
 						<span className="px-6 text-gray-400 font-medium">
@@ -187,7 +182,6 @@ const Login = () => {
 						</span>
 						<hr className="flex-grow border-t border-white/30" />
 					</div>
-
 					<div className="flex flex-col gap-4">
 						<button
 							className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-white/[0.03] border-light-gradient text-white font-medium hover:bg-white/[0.06] transition-all duration-300 cursor-pointer backdrop-blur-sm shadow-lg hover:shadow-white/5"
@@ -204,7 +198,6 @@ const Login = () => {
 							Continue with GitHub
 						</button>
 					</div>
-
 					<p className="text-center text-sm mt-8 text-gray-400">
 						Don't have an account?
 						<Link

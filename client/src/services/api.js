@@ -115,6 +115,17 @@ export const documentAPI = {
 	},
 };
 
+// Dashboard / aggregated user data APIs
+export const dashboardAPI = {
+	getDashboard: async () => {
+		const response = await fetch(`${API_BASE_URL}/user/dashboard`, {
+			method: "GET",
+			headers: getAuthHeaders(),
+		});
+		return response;
+	},
+};
+
 // AI Query APIs
 export const queryAPI = {
 	// Send a query to the AI system

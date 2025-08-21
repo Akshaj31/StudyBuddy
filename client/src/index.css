@@ -30,6 +30,16 @@ body {
 	display: none;
 }
 
+/* Ensure all native buttons and clickable role elements show pointer */
+button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"], a.btn {
+	cursor: pointer;
+}
+
+/* Utility class if we need to explicitly add later */
+.cursor-pointer-important {
+	cursor: pointer !important;
+}
+
 html,
 body,
 #root {

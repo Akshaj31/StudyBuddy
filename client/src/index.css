@@ -9,14 +9,35 @@
 }
 
 body {
-	/* Darker gradient with subtle warm undertones */
+	/* Enhanced sophisticated gradient with depth and warmth */
 	background: radial-gradient(
-		circle,
-		#1a1a28 0%,
-		#0f0f1d 60%,
-		#070712 80%,
+		ellipse at top left,
+		#1a1a2e 0%,
+		#16213e 25%,
+		#0f1419 50%,
+		#0a0e1a 75%,
 		#000000 100%
-	);
+	) !important;
+	/* Add subtle overlay gradients for extra depth */
+	background-image: radial-gradient(
+			circle at 85% 15%,
+			rgba(79, 139, 255, 0.15) 0%,
+			transparent 50%
+		),
+		radial-gradient(
+			circle at 15% 85%,
+			rgba(255, 216, 89, 0.08) 0%,
+			transparent 50%
+		),
+		linear-gradient(135deg, rgba(147, 51, 234, 0.03) 0%, transparent 50%) !important;
+	background-attachment: fixed !important;
+	background-repeat: no-repeat !important;
+	background-size: cover !important;
+	min-height: 100vh;
+}
+
+html {
+	background: #000000;
 	min-height: 100vh;
 }
 
@@ -31,7 +52,12 @@ body {
 }
 
 /* Ensure all native buttons and clickable role elements show pointer */
-button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"], a.btn {
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+a.btn {
 	cursor: pointer;
 }
 
@@ -45,4 +71,64 @@ body,
 #root {
 	height: 100vh;
 	margin: 0;
+}
+
+/* Custom animations for enhanced UX */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes slideInFromLeft {
+	from {
+		opacity: 0;
+		transform: translateX(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes bounceIn {
+	0% {
+		opacity: 0;
+		transform: scale(0.9);
+	}
+	60% {
+		opacity: 1;
+		transform: scale(1.05);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+.animate-fadeIn {
+	animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slideInFromLeft {
+	animation: slideInFromLeft 0.5s ease-out;
+}
+
+.animate-bounceIn {
+	animation: bounceIn 0.7s ease-out;
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+	transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }

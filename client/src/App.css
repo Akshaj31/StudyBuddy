@@ -26,18 +26,18 @@
 		left: 5%;
 		width: 500px;
 		height: 400px;
-		/* Subtle, darker orbs with minimal yellow presence */
+		/* Enhanced orbs that create depth and atmosphere */
 		background: radial-gradient(
 				circle at 30% 30%,
-				#ffd859 8%,
-				#4f8bff 20%,
-				transparent 75%
+				rgba(79, 139, 255, 0.18) 0%,
+				rgba(255, 216, 89, 0.12) 35%,
+				transparent 70%
 			),
 			radial-gradient(
 				circle at 70% 60%,
-				#ffeb82 4%,
-				#3a7fff 15%,
-				transparent 85%
+				rgba(255, 235, 130, 0.1) 0%,
+				rgba(58, 127, 255, 0.08) 40%,
+				transparent 80%
 			);
 	}
 
@@ -46,18 +46,18 @@
 		right: 5%;
 		width: 400px;
 		height: 600px;
-		/* Reduced intensity for darker atmosphere */
+		/* Second orb with purple and blue accents */
 		background: radial-gradient(
 				circle at 60% 40%,
-				#ffd859 10%,
-				#4f8bff 25%,
-				transparent 80%
+				rgba(147, 51, 234, 0.15) 0%,
+				rgba(79, 139, 255, 0.1) 45%,
+				transparent 75%
 			),
 			radial-gradient(
 				circle at 20% 70%,
-				#ffeb82 6%,
-				#3a7fff 18%,
-				transparent 88%
+				rgba(255, 216, 89, 0.08) 0%,
+				rgba(58, 127, 255, 0.06) 45%,
+				transparent 85%
 			);
 	}
 }
@@ -80,6 +80,7 @@
 	);
 	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
 	-webkit-mask-composite: xor;
+	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
 	mask-composite: exclude;
 	pointer-events: none;
 	z-index: -1;

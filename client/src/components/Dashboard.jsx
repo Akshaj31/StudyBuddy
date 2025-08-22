@@ -122,6 +122,9 @@ const Dashboard = () => {
 						suffix: "hrs",
 						icon: "⏱️",
 						color: "text-[#ffd859]",
+						trend: data.stats.totalStudyHours > 0 ? "up" : "neutral",
+						trendValue: "+2.5",
+						bgGradient: "from-yellow-500/10 to-orange-500/5",
 					},
 					{
 						label: "Subjects Mastered",
@@ -129,6 +132,9 @@ const Dashboard = () => {
 						suffix: "",
 						icon: "🎯",
 						color: "text-emerald-400",
+						trend: data.stats.subjectsMastered > 0 ? "up" : "neutral",
+						trendValue: "+1",
+						bgGradient: "from-emerald-500/10 to-green-500/5",
 					},
 					{
 						label: "Average Score",
@@ -136,6 +142,14 @@ const Dashboard = () => {
 						suffix: "/10",
 						icon: "⭐",
 						color: "text-blue-400",
+						trend:
+							data.stats.averageScore > 7
+								? "up"
+								: data.stats.averageScore > 0
+								? "neutral"
+								: "down",
+						trendValue: data.stats.averageScore > 0 ? "+0.5" : "0",
+						bgGradient: "from-blue-500/10 to-cyan-500/5",
 					},
 					{
 						label: "Study Streak",
@@ -143,6 +157,9 @@ const Dashboard = () => {
 						suffix: "days",
 						icon: "🔥",
 						color: "text-orange-400",
+						trend: data.stats.studyStreakDays > 0 ? "up" : "neutral",
+						trendValue: data.stats.studyStreakDays > 0 ? "+1" : "0",
+						bgGradient: "from-orange-500/10 to-red-500/5",
 					},
 				]);
 
@@ -213,7 +230,7 @@ const Dashboard = () => {
 	// Unified early return section (after all hooks to satisfy rules of hooks)
 	if (loading || loadingDashboard) {
 		return (
-			<div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+			<div className="flex items-center justify-center min-h-screen">
 				<div className="text-center">
 					<div className="w-16 h-16 border-4 border-[#ffd859] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
 					<div className="text-white text-lg">
@@ -228,16 +245,19 @@ const Dashboard = () => {
 
 	return (
 		<div className="flex h-screen">
-			{/* Minimal Sidebar */}
-			<div className="w-64 bg-black/30 backdrop-blur-sm border-r border-white/10 flex flex-col border-light-gradient">
+			{/* Enhanced Minimal Sidebar */}
+			<div className="w-64 bg-black/40 backdrop-blur-xl border-r border-white/10 flex flex-col border-light-gradient shadow-2xl">
 				{/* Logo Section */}
 				<div className="p-6 border-b border-white/10">
 					<div className="flex items-center gap-3">
-						<div className="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg flex items-center justify-center">
-							<span className="text-gray-300 text-base">📚</span>
+						<div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg flex items-center justify-center">
+							<span className="text-blue-400 text-base">📚</span>
 						</div>
 						<div>
-							<h1 className="text-gray-100 font-medium text-lg">StudyBuddy</h1>
+							<h1 className="text-gray-100 font-semibold text-lg">
+								StudyBuddy
+							</h1>
+							<p className="text-gray-400 text-xs">AI-Powered Learning</p>
 						</div>
 					</div>
 				</div>
@@ -283,29 +303,71 @@ const Dashboard = () => {
 							</button>
 
 							{showChats && (
-								<div className="mt-2 space-y-1">
+								<div className="mt-3 space-y-2">
 									{loadingChats ? (
-										<div className="text-gray-500 text-sm px-2 py-1">
-											Loading...
+										<div className="flex items-center gap-3 px-3 py-2">
+											<div className="w-6 h-6 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+											<span className="text-gray-500 text-sm">
+												Loading chats...
+											</span>
 										</div>
 									) : recentChats.length === 0 ? (
-										<div className="text-gray-500 text-sm px-2 py-1">
-											No chats yet
+										<div className="text-center py-6">
+											<div className="w-12 h-12 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-2">
+												<span className="text-gray-500 text-xl">💬</span>
+											</div>
+											<p className="text-gray-500 text-sm">No chats yet</p>
+											<p className="text-gray-600 text-xs mt-1">
+												Start a conversation to see your history
+											</p>
 										</div>
 									) : (
 										recentChats.map((chat) => (
 											<button
 												key={chat.id}
 												onClick={() => navigate(`/chat/${chat.id}`)}
-												className="w-full text-left px-3 py-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 text-gray-300 hover:text-white transition-colors group"
+												className="w-full text-left px-3 py-3 rounded-xl bg-gray-800/30 hover:bg-gray-800/50 border border-gray-700/50 hover:border-gray-600/50 text-gray-300 hover:text-white transition-all duration-200 group hover:scale-[1.02]"
 											>
-												<div className="flex items-center justify-between gap-2">
-													<span className="truncate text-sm group-hover:text-white">
-														{chat.title}
-													</span>
-													<span className="text-[10px] text-gray-500 whitespace-nowrap">
-														{timeAgo(chat.updatedAt)}
-													</span>
+												<div className="flex items-start gap-3">
+													{/* Chat Icon */}
+													<div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+														<span className="text-blue-400 text-sm">💭</span>
+													</div>
+
+													{/* Chat Content */}
+													<div className="flex-1 min-w-0">
+														<div className="flex items-center justify-between gap-2 mb-1">
+															<span className="truncate text-sm font-medium group-hover:text-white transition-colors">
+																{chat.title || "Untitled Chat"}
+															</span>
+															<span className="text-[10px] text-gray-500 whitespace-nowrap bg-gray-700/50 px-2 py-0.5 rounded-full">
+																{timeAgo(chat.updatedAt)}
+															</span>
+														</div>
+
+														{/* Message Preview */}
+														<div className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors truncate">
+															{chat.lastMessage ? (
+																<span>"{chat.lastMessage}"</span>
+															) : (
+																<span className="italic">No messages yet</span>
+															)}
+														</div>
+
+														{/* Chat Stats */}
+														<div className="flex items-center gap-3 mt-2 text-[10px] text-gray-600">
+															<span className="flex items-center gap-1">
+																<span>📝</span>
+																{chat.messageCount || 0} messages
+															</span>
+															{chat.hasFiles && (
+																<span className="flex items-center gap-1">
+																	<span>📎</span>
+																	Files attached
+																</span>
+															)}
+														</div>
+													</div>
 												</div>
 											</button>
 										))
@@ -313,9 +375,14 @@ const Dashboard = () => {
 									{!loadingChats && recentChats.length > 0 && (
 										<button
 											onClick={() => navigate("/chat")}
-											className="w-full mt-1 text-center text-xs px-3 py-1.5 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 text-gray-400 hover:text-gray-200 transition-colors"
+											className="w-full mt-3 text-center text-sm px-3 py-2.5 rounded-xl bg-gradient-to-r from-gray-800/50 to-gray-700/50 hover:from-gray-700/50 hover:to-gray-600/50 border border-gray-700/50 hover:border-gray-600/50 text-gray-400 hover:text-gray-200 transition-all duration-200 font-medium group hover:scale-[1.02]"
 										>
-											View more
+											<span className="flex items-center justify-center gap-2">
+												<span>View all chats</span>
+												<span className="group-hover:translate-x-1 transition-transform duration-200">
+													→
+												</span>
+											</span>
 										</button>
 									)}
 								</div>
@@ -347,58 +414,122 @@ const Dashboard = () => {
 			</div>
 
 			{/* Main Content */}
-			<div className="flex-1 overflow-auto bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50">
-				<div className="p-4 space-y-4">
-					{/* Welcome Header - More Prominent */}
-					<div className="bg-white/[0.02] rounded-2xl p-6 border border-white/5 mb-6">
+			{/* Enhanced Main Content */}
+			<div className="flex-1 overflow-auto">
+				<div className="p-8 max-w-7xl mx-auto">
+					{/* Welcome Header */}
+					<div className="mb-8 animate-fadeIn">
 						<h1 className="text-3xl font-bold text-white mb-2">
-							Welcome back, {user?.username || "User"}! 👋
+							Welcome back, {user?.username || "Student"}! 👋
 						</h1>
-						<p className="text-gray-300 text-lg">
+						<p className="text-gray-400 text-lg">
 							Ready to continue your learning journey?
 						</p>
-					</div>
-
-					{/* Stats Cards - Simplified One Line */}
-					<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+					</div>{" "}
+					{/* Stats Cards - Enhanced with Trends */}
+					<div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 						{stats.map((stat, index) => (
 							<div
 								key={index}
-								className="bg-white/[0.02] backdrop-blur-xl rounded-xl p-3 border border-white/5"
+								className={`bg-gradient-to-br ${stat.bgGradient} backdrop-blur-xl rounded-xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300 group hover:scale-105`}
 							>
-								<div className="flex items-center gap-2">
-									<span className="text-lg">{stat.icon}</span>
-									<div>
-										<div className={`text-sm font-bold ${stat.color}`}>
-											{stat.value}
-											<span className="text-gray-500 text-xs ml-1">
-												{stat.suffix}
-											</span>
+								<div className="flex items-start justify-between mb-2">
+									<div className="flex items-center gap-2">
+										<span className="text-xl group-hover:scale-110 transition-transform duration-300">
+											{stat.icon}
+										</span>
+										<div>
+											<div className="flex items-center gap-2">
+												<span className={`text-lg font-bold ${stat.color}`}>
+													{stat.value}
+													<span className="text-gray-500 text-xs ml-1">
+														{stat.suffix}
+													</span>
+												</span>
+												{stat.trend !== "neutral" && (
+													<div
+														className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+															stat.trend === "up"
+																? "bg-green-500/20 text-green-400"
+																: "bg-red-500/20 text-red-400"
+														}`}
+													>
+														<span>{stat.trend === "up" ? "↗" : "↘"}</span>
+														<span>{stat.trendValue}</span>
+													</div>
+												)}
+											</div>
 										</div>
-										<div className="text-gray-400 text-xs">{stat.label}</div>
 									</div>
+								</div>
+								<div className="text-gray-400 text-xs font-medium">
+									{stat.label}
+								</div>
+								{/* Progress bar for visual appeal */}
+								<div className="mt-2 w-full bg-white/5 rounded-full h-1 overflow-hidden">
+									<div
+										className={`h-full bg-gradient-to-r ${
+											stat.color.includes("yellow")
+												? "from-yellow-400 to-orange-400"
+												: stat.color.includes("emerald")
+												? "from-emerald-400 to-green-400"
+												: stat.color.includes("blue")
+												? "from-blue-400 to-cyan-400"
+												: "from-orange-400 to-red-400"
+										} transition-all duration-500`}
+										style={{
+											width: `${Math.min(
+												(parseInt(stat.value) || 0) * 10,
+												100
+											)}%`,
+										}}
+									></div>
 								</div>
 							</div>
 						))}
 					</div>
-
 					{/* AI Study Assistant - Main Feature */}
-					<div className="border-light-gradient  backdrop-blur-xl rounded-2xl p-6 border-0 relative overflow-hidden mb-8">
+					<div className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-6 relative overflow-hidden mb-8 border-light-gradient">
 						<div className="absolute top-0 right-0 w-40 h-40 bg-[#ffd859]/20 rounded-full blur-3xl"></div>
 						<div className="absolute bottom-0 left-0 w-32 h-32 bg-[#4f8bff]/20 rounded-full blur-2xl"></div>
 
 						<div className="relative z-10">
-							<div className="flex items-center gap-4 mb-4">
-								<div className="w-14 h-14 bg-gradient-to-br from-[#ffd859] to-[#ffeb82] rounded-2xl flex items-center justify-center shadow-lg">
-									<span className="text-black font-bold text-xl">🤖</span>
+							<div className="flex items-center justify-between mb-4">
+								<div className="flex items-center gap-4">
+									<div className="w-14 h-14 bg-gradient-to-br from-[#ffd859] to-[#ffeb82] rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+										<span className="text-black font-bold text-xl">🤖</span>
+									</div>
+									<div>
+										<h2 className="text-xl font-bold text-white">
+											AI Study Assistant
+										</h2>
+										<p className="text-gray-300 text-base">
+											Your personal learning companion
+										</p>
+									</div>
 								</div>
-								<div>
-									<h2 className="text-xl font-bold text-white">
-										AI Study Assistant
-									</h2>
-									<p className="text-gray-300 text-base">
-										Your personal learning companion
-									</p>
+								{/* Status indicator */}
+								<div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 border border-green-500/30 rounded-full">
+									<div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+									<span className="text-green-400 text-sm font-medium">
+										Ready to help
+									</span>
+								</div>
+							</div>
+
+							{/* Quick stats about available resources */}
+							<div className="mb-4 flex items-center gap-4 text-sm text-gray-400">
+								<div className="flex items-center gap-2">
+									<span>📚</span>
+									<span>{attachedFiles.length} files ready</span>
+								</div>
+								<div className="flex items-center gap-2">
+									<span>💡</span>
+									<span>AI-powered insights</span>
+								</div>
+								<div className="flex items-center gap-2">
+									<span>⚡</span>
+									<span>Instant responses</span>
 								</div>
 							</div>
 
@@ -550,26 +681,89 @@ const Dashboard = () => {
 							</div>
 						</div>
 					</div>
-
-					{/* Recent Activity - Minimal */}
-					<div className="bg-white/[0.02] backdrop-blur-xl rounded-xl p-4 border border-white/5">
-						<h3 className="text-base font-semibold text-white mb-3">
-							Recent Activity
-						</h3>
-						<div className="space-y-2">
-							{recentActivity.slice(0, 2).map((activity, index) => (
-								<div
-									key={index}
-									className="flex items-center gap-3 p-2 bg-white/5 rounded-lg"
-								>
-									<span className="text-sm">{activity.icon}</span>
-									<div className="flex-1">
-										<div className="text-white text-sm">{activity.subject}</div>
-										<div className="text-gray-500 text-xs">{activity.time}</div>
-									</div>
-								</div>
-							))}
+					{/* Enhanced Recent Activity */}
+					<div className="bg-white/[0.02] backdrop-blur-xl rounded-xl p-6 border border-white/5 hover:border-white/10 transition-all duration-300 group">
+						<div className="flex items-center justify-between mb-4">
+							<h3 className="text-lg font-semibold text-white flex items-center gap-2">
+								<span className="w-8 h-8 bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-lg flex items-center justify-center">
+									<span className="text-purple-400">⚡</span>
+								</span>
+								Recent Activity
+							</h3>
+							<button className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+								View All
+							</button>
 						</div>
+
+						<div className="space-y-3">
+							{recentActivity.length > 0 ? (
+								recentActivity.slice(0, 3).map((activity, index) => (
+									<div
+										key={index}
+										className="group/item flex items-center gap-4 p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 hover:border-white/20 transition-all duration-200 cursor-pointer hover:scale-[1.02]"
+									>
+										{/* Activity Icon */}
+										<div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-xl flex items-center justify-center group-hover/item:scale-110 transition-transform duration-200">
+											<span className="text-blue-400 text-lg">
+												{activity.icon}
+											</span>
+										</div>
+
+										{/* Activity Content */}
+										<div className="flex-1 min-w-0">
+											<div className="text-white text-sm font-medium mb-1 group-hover/item:text-blue-400 transition-colors">
+												{activity.subject}
+											</div>
+											<div className="text-gray-400 text-xs flex items-center gap-2">
+												<span>{activity.time}</span>
+												<span className="w-1 h-1 bg-gray-500 rounded-full"></span>
+												<span className="text-gray-500">
+													{activity.type || "Study Session"}
+												</span>
+											</div>
+										</div>
+
+										{/* Action Button */}
+										<div className="opacity-0 group-hover/item:opacity-100 transition-opacity duration-200">
+											<button className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+												<svg
+													className="w-4 h-4"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M9 5l7 7-7 7"
+													/>
+												</svg>
+											</button>
+										</div>
+									</div>
+								))
+							) : (
+								<div className="text-center py-8">
+									<div className="w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-3">
+										<span className="text-gray-500 text-2xl">📊</span>
+									</div>
+									<p className="text-gray-400 text-sm">No recent activity</p>
+									<p className="text-gray-500 text-xs mt-1">
+										Start studying to see your progress here
+									</p>
+								</div>
+							)}
+						</div>
+
+						{/* Quick Action Footer */}
+						{recentActivity.length > 3 && (
+							<div className="mt-4 pt-3 border-t border-white/10">
+								<button className="w-full text-center text-gray-400 hover:text-white text-sm font-medium transition-colors hover:bg-white/5 py-2 rounded-lg">
+									Show {recentActivity.length - 3} more activities
+								</button>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>

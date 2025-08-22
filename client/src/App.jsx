@@ -31,7 +31,7 @@ function AppContent() {
 	}, [location.pathname]);
 
 	return (
-		<div className="text-white min-h-screen">
+		<div className="text-white min-h-screen relative">
 			<div className="light-orb light-orb-1"></div>
 			<div className="light-orb light-orb-2"></div>
 			{/* Hide navbar on dashboard and chat */}

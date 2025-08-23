@@ -4,19 +4,31 @@ const API_BASE_URL = "http://localhost:4000/api/v1";
 // Helper function to get auth headers
 const getAuthHeaders = () => {
 	const token = localStorage.getItem("token");
-	return {
-		Authorization: `Bearer ${token}`,
-		"Content-Type": "application/json",
-	};
+	const headers = { "Content-Type": "application/json" };
+	if (token) headers.Authorization = `Bearer ${token}`;
+	return headers;
 };
 
 // Helper function to get auth headers for file uploads
 const getAuthHeadersForUpload = () => {
 	const token = localStorage.getItem("token");
-	return {
-		Authorization: `Bearer ${token}`,
-		// Don't set Content-Type for FormData, let browser set it
-	};
+	const headers = {};
+	if (token) headers.Authorization = `Bearer ${token}`;
+	return headers; // Let browser set multipart boundary
+};
+
+// Centralized 401 handling: redirect to /login and clear storage
+const handleUnauthorized = () => {
+	try {
+		localStorage.removeItem("token");
+		localStorage.removeItem("user");
+	} catch {}
+	// Avoid throwing if window not available (SSR safety)
+	if (typeof window !== "undefined") {
+		if (window.location.pathname !== "/login") {
+			window.location.replace("/login");
+		}
+	}
 };
 
 // User Authentication APIs
@@ -26,6 +38,7 @@ export const authAPI = {
 			method: "GET",
 			headers: getAuthHeaders(),
 		});
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 
@@ -37,6 +50,7 @@ export const authAPI = {
 			},
 			body: JSON.stringify(credentials),
 		});
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 
@@ -48,6 +62,7 @@ export const authAPI = {
 			},
 			body: JSON.stringify(userData),
 		});
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 
@@ -59,6 +74,7 @@ export const authAPI = {
 			},
 			body: JSON.stringify(tokenData),
 		});
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 
@@ -70,6 +86,7 @@ export const authAPI = {
 			},
 			body: JSON.stringify(tokenData),
 		});
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 };
@@ -90,6 +107,7 @@ export const documentAPI = {
 			headers: getAuthHeadersForUpload(),
 			body: formData,
 		});
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 
@@ -99,6 +117,7 @@ export const documentAPI = {
 			method: "GET",
 			headers: getAuthHeaders(),
 		});
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 
@@ -111,6 +130,7 @@ export const documentAPI = {
 				headers: getAuthHeaders(),
 			}
 		);
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 };
@@ -122,6 +142,7 @@ export const dashboardAPI = {
 			method: "GET",
 			headers: getAuthHeaders(),
 		});
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 };
@@ -138,6 +159,7 @@ export const queryAPI = {
 				sessionId,
 			}),
 		});
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 
@@ -147,6 +169,7 @@ export const queryAPI = {
 			method: "GET",
 			headers: getAuthHeaders(),
 		});
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 
@@ -159,6 +182,7 @@ export const queryAPI = {
 				headers: getAuthHeaders(),
 			}
 		);
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 
@@ -171,6 +195,7 @@ export const queryAPI = {
 				headers: getAuthHeaders(),
 			}
 		);
+		if (response.status === 401) handleUnauthorized();
 		return response;
 	},
 };

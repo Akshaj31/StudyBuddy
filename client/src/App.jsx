@@ -7,6 +7,7 @@ import Dashboard from "./components/Dashboard";
 import ChatPage from "./components/ChatPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import Hero from "./components/Hero";
 import HeroCards from "./components/HeroCards";
 
@@ -37,37 +38,39 @@ function AppContent() {
 			{/* Hide navbar on dashboard and chat */}
 			{!["/dashboard"].includes(location.pathname) &&
 				!location.pathname.startsWith("/chat") && <Navbar />}
-			<Routes>
-				<Route path="/register" element={<Register />} />
-				<Route path="/login" element={<Login />} />
-				<Route path="/dashboard" element={<Dashboard />} />
-				<Route
-					path="/chat/new"
-					element={
-						<ErrorBoundary>
-							<ChatPage />
-						</ErrorBoundary>
-					}
-				/>
-				<Route
-					path="/chat/:sessionId"
-					element={
-						<ErrorBoundary>
-							<ChatPage />
-						</ErrorBoundary>
-					}
-				/>
-				<Route
-					path="/chat"
-					element={
-						<ErrorBoundary>
-							<ChatPage />
-						</ErrorBoundary>
-					}
-				/>
-				<Route path="/" element={<Hero />} />
-				<Route path="/features" element={<HeroCards />} />
-			</Routes>
+			<AnimatePresence mode="wait" initial={false}>
+				<Routes location={location} key={location.pathname}>
+					<Route path="/register" element={<Register />} />
+					<Route path="/login" element={<Login />} />
+					<Route path="/dashboard" element={<Dashboard />} />
+					<Route
+						path="/chat/new"
+						element={
+							<ErrorBoundary>
+								<ChatPage />
+							</ErrorBoundary>
+						}
+					/>
+					<Route
+						path="/chat/:sessionId"
+						element={
+							<ErrorBoundary>
+								<ChatPage />
+							</ErrorBoundary>
+						}
+					/>
+					<Route
+						path="/chat"
+						element={
+							<ErrorBoundary>
+								<ChatPage />
+							</ErrorBoundary>
+						}
+					/>
+					<Route path="/" element={<Hero />} />
+					<Route path="/features" element={<HeroCards />} />
+				</Routes>
+			</AnimatePresence>
 		</div>
 	);
 }

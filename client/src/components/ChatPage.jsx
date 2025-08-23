@@ -8,6 +8,12 @@ import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
 import ChatSidebar from "./ChatSidebar.jsx";
 import ChatInput from "./ChatInput.jsx";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+	messageVariants,
+	typingIndicatorVariants,
+} from "../animations/variants.js";
+import { AnimatedPage } from "../animations/components.jsx";
 
 const ChatPage = () => {
 	const location = useLocation();
@@ -326,266 +332,306 @@ const ChatPage = () => {
 	}
 
 	return (
-		<div className="fixed inset-0 flex overflow-hidden">
-			{/* Sidebar */}
-			<ChatSidebar
-				user={user}
-				chatSessions={chatSessions}
-				loadingChats={loadingChats}
-				searchQuery={searchQuery}
-				setSearchQuery={setSearchQuery}
-				currentSessionId={currentSessionId}
-				navigate={navigate}
-				clearChat={clearChat}
-				logout={logout}
-			/>
+		<AnimatedPage>
+			<div className="fixed inset-0 flex overflow-hidden">
+				{/* Sidebar */}
+				<ChatSidebar
+					user={user}
+					chatSessions={chatSessions}
+					loadingChats={loadingChats}
+					searchQuery={searchQuery}
+					setSearchQuery={setSearchQuery}
+					currentSessionId={currentSessionId}
+					navigate={navigate}
+					clearChat={clearChat}
+					logout={logout}
+				/>
 
-			{/* Main Chat Area */}
-			<div className="flex-1 flex flex-col h-full overflow-hidden relative">
-				{/* Chat Header */}
-				<div className="bg-gray-900/40 backdrop-blur-xl border-b border-gray-600/50 p-5 flex-shrink-0 shadow-lg">
-					<div className="flex items-center justify-between">
-						<div className="flex items-center space-x-4">
-							<div>
-								<h3 className="text-gray-100 font-bold text-xl">{getCurrentChatTitle()}</h3>
-								<p className="text-gray-400 text-sm">AI Study Assistant</p>
+				{/* Main Chat Area */}
+				<div className="flex-1 flex flex-col h-full overflow-hidden relative">
+					{/* Chat Header */}
+					<div className="bg-gray-900/40 backdrop-blur-xl border-b border-gray-600/50 p-5 flex-shrink-0 shadow-lg">
+						<div className="flex items-center justify-between">
+							<div className="flex items-center space-x-4">
+								<div>
+									<h3 className="text-gray-100 font-bold text-xl">
+										{getCurrentChatTitle()}
+									</h3>
+									<p className="text-gray-400 text-sm">AI Study Assistant</p>
+								</div>
+							</div>
+							<div className="flex items-center space-x-2">
+								<span className="text-green-400 text-xs">●</span>
+								<span className="text-gray-400 text-xs font-medium">
+									Online
+								</span>
 							</div>
 						</div>
-						<div className="flex items-center space-x-2">
-							<span className="text-green-400 text-xs">●</span>
-							<span className="text-gray-400 text-xs font-medium">Online</span>
-						</div>
 					</div>
-				</div>
 
-				{/* Messages Container */}
-				<div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-					<div
-						className="flex-1 overflow-y-auto px-4 py-6 pb-32 min-h-0"
-						onScroll={handleScroll}
-					>
-						<div className="space-y-6 max-w-3xl mx-auto">
-							{messages.map((message, index) => (
-								<div key={index} className="mb-6">
-									{message.role === "user" ? (
-										// User message with bubble (like ChatGPT)
-										<div className="flex justify-end mb-4">
-											<div className="max-w-[80%] bg-[#ffd859]/10 text-gray-100 border border-[#ffd859]/20 rounded-2xl p-4 shadow-sm backdrop-blur-sm">
-												<div className="text-sm text-gray-100 leading-relaxed">
-													{message.content}
-												</div>
-												{/* Show file attachments for user messages */}
-												{message.attachments && message.attachments.length > 0 && (
-													<div className="mt-3 flex flex-wrap gap-2">
-														{message.attachments.map((attachment, idx) => (
-															<div
-																key={idx}
-																className="bg-[#ffd859]/20 text-[#ffd859] px-3 py-1 rounded-lg text-xs flex items-center gap-2 border border-[#ffd859]/30"
-															>
-																{attachment.type === "image" ? (
-																	<span>🖼️</span>
-																) : (
-																	<span>📄</span>
-																)}
-																{attachment.name}
-															</div>
-														))}
-													</div>
-												)}
-											</div>
-										</div>
-									) : (
-										// AI response without bubble (like ChatGPT)
-										<div className="mb-6">
-											{message.isError ? (
-												<div className="bg-red-900/20 text-red-300 border border-red-800/30 rounded-xl p-4 shadow-sm backdrop-blur-sm">
-													<div className="text-sm leading-relaxed">
-														{message.content}
+					{/* Messages Container */}
+					<div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+						<div
+							className="flex-1 overflow-y-auto px-4 py-6 pb-32 min-h-0"
+							onScroll={handleScroll}
+						>
+							<div className="space-y-6 max-w-3xl mx-auto">
+								<AnimatePresence initial={false}>
+									{messages.map((message, index) => (
+										<motion.div
+											key={index}
+											initial={{
+												opacity: 0,
+												x: message.role === "user" ? 30 : -20,
+												scale: 0.95,
+											}}
+											animate={{
+												opacity: 1,
+												x: 0,
+												scale: 1,
+											}}
+											transition={{
+												duration: 0.4,
+												ease: [0.25, 0.46, 0.45, 0.94],
+												delay: index * 0.05, // Slight stagger for multiple messages
+											}}
+											className="mb-6"
+										>
+											{message.role === "user" ? (
+												// User message with bubble (like ChatGPT)
+												<div className="flex justify-end mb-4">
+													<div className="max-w-[80%] bg-[#ffd859]/10 text-gray-100 border border-[#ffd859]/20 rounded-2xl p-4 shadow-sm backdrop-blur-sm">
+														<div className="text-sm text-gray-100 leading-relaxed">
+															{message.content}
+														</div>
+														{/* Show file attachments for user messages */}
+														{message.attachments &&
+															message.attachments.length > 0 && (
+																<div className="mt-3 flex flex-wrap gap-2">
+																	{message.attachments.map(
+																		(attachment, idx) => (
+																			<div
+																				key={idx}
+																				className="bg-[#ffd859]/20 text-[#ffd859] px-3 py-1 rounded-lg text-xs flex items-center gap-2 border border-[#ffd859]/30"
+																			>
+																				{attachment.type === "image" ? (
+																					<span>🖼️</span>
+																				) : (
+																					<span>📄</span>
+																				)}
+																				{attachment.name}
+																			</div>
+																		)
+																	)}
+																</div>
+															)}
 													</div>
 												</div>
 											) : (
-												<div className="text-gray-200 leading-relaxed">
-													<div className="prose prose-sm prose-invert max-w-none">
-														<ReactMarkdown
-															rehypePlugins={[rehypeHighlight]}
-															components={{
-																// Clean, consistent styling that matches your theme
-																p: (props) => (
-																	<p
-																		className="mb-4 text-gray-200 leading-relaxed text-sm"
-																		{...props}
-																	/>
-																),
-																h1: (props) => (
-																	<h1
-																		className="text-lg font-bold mb-4 mt-6 text-white border-l-2 border-[#ffd859] pl-3"
-																		{...props}
-																	/>
-																),
-																h2: (props) => (
-																	<h2
-																		className="text-base font-semibold mb-3 mt-5 text-gray-100"
-																		{...props}
-																	/>
-																),
-																h3: (props) => (
-																	<h3
-																		className="text-sm font-semibold mb-2 mt-4 text-gray-200"
-																		{...props}
-																	/>
-																),
-																ul: (props) => (
-																	<ul
-																		className="mb-4 ml-4 space-y-2 text-sm"
-																		{...props}
-																	/>
-																),
-																ol: (props) => (
-																	<ol
-																		className="mb-4 ml-4 space-y-2 text-sm list-decimal"
-																		{...props}
-																	/>
-																),
-																li: (props) => (
-																	<li className="text-gray-200 leading-relaxed" {...props} />
-																),
-																hr: (props) => (
-																	<hr
-																		className="my-6 border-gray-600/40 border-t"
-																		{...props}
-																	/>
-																),
-																code: ({ inline, ...props }) =>
-																	inline ? (
-																		<code
-																			className="bg-gray-700/50 px-1.5 py-0.5 rounded text-[#ffd859] text-xs font-mono"
-																			{...props}
-																		/>
-																	) : (
-																		<code
-																			className="block bg-gray-900/60 p-3 rounded-lg overflow-x-auto border border-gray-700/30 text-xs my-2"
-																			{...props}
-																		/>
-																	),
-																blockquote: (props) => (
-																	<blockquote
-																		className="border-l-3 border-[#ffd859]/40 pl-4 my-4 italic text-gray-300 text-sm bg-gray-800/20 py-3 rounded-r-lg"
-																		{...props}
-																	/>
-																),
-																strong: (props) => (
-																	<strong
-																		className="font-semibold text-gray-100"
-																		{...props}
-																	/>
-																),
-																em: (props) => (
-																	<em
-																		className="italic text-gray-300"
-																		{...props}
-																	/>
-																),
-															}}
-														>
-															{message.content}
-														</ReactMarkdown>
+												// AI response without bubble (like ChatGPT)
+												<div className="mb-6">
+													{message.isError ? (
+														<div className="bg-red-900/20 text-red-300 border border-red-800/30 rounded-xl p-4 shadow-sm backdrop-blur-sm">
+															<div className="text-sm leading-relaxed">
+																{message.content}
+															</div>
+														</div>
+													) : (
+														<div className="text-gray-200 leading-relaxed">
+															<div className="prose prose-sm prose-invert max-w-none">
+																<ReactMarkdown
+																	rehypePlugins={[rehypeHighlight]}
+																	components={{
+																		// Clean, consistent styling that matches your theme
+																		p: (props) => (
+																			<p
+																				className="mb-4 text-gray-200 leading-relaxed text-sm"
+																				{...props}
+																			/>
+																		),
+																		h1: (props) => (
+																			<h1
+																				className="text-lg font-bold mb-4 mt-6 text-white border-l-2 border-[#ffd859] pl-3"
+																				{...props}
+																			/>
+																		),
+																		h2: (props) => (
+																			<h2
+																				className="text-base font-semibold mb-3 mt-5 text-gray-100"
+																				{...props}
+																			/>
+																		),
+																		h3: (props) => (
+																			<h3
+																				className="text-sm font-semibold mb-2 mt-4 text-gray-200"
+																				{...props}
+																			/>
+																		),
+																		ul: (props) => (
+																			<ul
+																				className="mb-4 ml-4 space-y-2 text-sm"
+																				{...props}
+																			/>
+																		),
+																		ol: (props) => (
+																			<ol
+																				className="mb-4 ml-4 space-y-2 text-sm list-decimal"
+																				{...props}
+																			/>
+																		),
+																		li: (props) => (
+																			<li
+																				className="text-gray-200 leading-relaxed"
+																				{...props}
+																			/>
+																		),
+																		hr: (props) => (
+																			<hr
+																				className="my-6 border-gray-600/40 border-t"
+																				{...props}
+																			/>
+																		),
+																		code: ({ inline, ...props }) =>
+																			inline ? (
+																				<code
+																					className="bg-gray-700/50 px-1.5 py-0.5 rounded text-[#ffd859] text-xs font-mono"
+																					{...props}
+																				/>
+																			) : (
+																				<code
+																					className="block bg-gray-900/60 p-3 rounded-lg overflow-x-auto border border-gray-700/30 text-xs my-2"
+																					{...props}
+																				/>
+																			),
+																		blockquote: (props) => (
+																			<blockquote
+																				className="border-l-3 border-[#ffd859]/40 pl-4 my-4 italic text-gray-300 text-sm bg-gray-800/20 py-3 rounded-r-lg"
+																				{...props}
+																			/>
+																		),
+																		strong: (props) => (
+																			<strong
+																				className="font-semibold text-gray-100"
+																				{...props}
+																			/>
+																		),
+																		em: (props) => (
+																			<em
+																				className="italic text-gray-300"
+																				{...props}
+																			/>
+																		),
+																	}}
+																>
+																	{message.content}
+																</ReactMarkdown>
+															</div>
+														</div>
+													)}
+												</div>
+											)}
+
+											{/* Show source type indicator for AI messages */}
+											{message.role === "assistant" && !message.isError && (
+												<div className="mt-2 mb-1">
+													<span
+														className={`text-xs px-2 py-1 rounded-full ${
+															message.hasRelevantContext
+																? "bg-green-500/20 text-green-400 border border-green-500/30"
+																: "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+														}`}
+													>
+														{message.hasRelevantContext
+															? "📚 Based on your documents"
+															: "🧠 General knowledge"}
+													</span>
+												</div>
+											)}
+
+											{/* Show sources for AI messages */}
+											{message.sources && message.sources.length > 0 && (
+												<div className="mt-3 pt-3 border-t border-slate-600">
+													<p className="text-xs text-slate-400 mb-2">
+														Sources:
+													</p>
+													<div className="space-y-1">
+														{message.sources.map((source, idx) => (
+															<div
+																key={idx}
+																className="text-xs text-slate-300 bg-slate-700/50 rounded px-2 py-1"
+															>
+																📄 Page {source.page}{" "}
+																{source.score &&
+																	`(${Math.round(source.score * 100)}% match)`}
+															</div>
+														))}
 													</div>
 												</div>
 											)}
-										</div>
-									)}
 
-									{/* Show source type indicator for AI messages */}
-									{message.role === "assistant" && !message.isError && (
-										<div className="mt-2 mb-1">
-											<span
-												className={`text-xs px-2 py-1 rounded-full ${
-													message.hasRelevantContext
-														? "bg-green-500/20 text-green-400 border border-green-500/30"
-														: "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+											{/* Timestamp */}
+											<div
+												className={`text-xs mt-2 ${
+													message.role === "user"
+														? "text-slate-700"
+														: "text-slate-500"
 												}`}
 											>
-												{message.hasRelevantContext
-													? "📚 Based on your documents"
-													: "🧠 General knowledge"}
-											</span>
-										</div>
-									)}
-
-									{/* Show sources for AI messages */}
-									{message.sources && message.sources.length > 0 && (
-										<div className="mt-3 pt-3 border-t border-slate-600">
-											<p className="text-xs text-slate-400 mb-2">Sources:</p>
-											<div className="space-y-1">
-												{message.sources.map((source, idx) => (
-													<div
-														key={idx}
-														className="text-xs text-slate-300 bg-slate-700/50 rounded px-2 py-1"
-													>
-														📄 Page {source.page}{" "}
-														{source.score &&
-															`(${Math.round(source.score * 100)}% match)`}
-													</div>
-												))}
+												{formatTimestamp(message.timestamp)}
 											</div>
-										</div>
-									)}
+										</motion.div>
+									))}
+								</AnimatePresence>
 
-									{/* Timestamp */}
-									<div
-										className={`text-xs mt-2 ${
-											message.role === "user"
-												? "text-slate-700"
-												: "text-slate-500"
-										}`}
+								{isLoading && (
+									<motion.div
+										initial={{ opacity: 0, scale: 0.8 }}
+										animate={{ opacity: 1, scale: 1 }}
+										exit={{ opacity: 0, scale: 0.8 }}
+										transition={{ duration: 0.3 }}
+										className="flex justify-start mb-4"
 									>
-										{formatTimestamp(message.timestamp)}
-									</div>
-								</div>
-							))}
-
-							{isLoading && (
-								<div className="flex justify-start mb-4">
-									<div className="bg-gray-800/40 text-white rounded-xl p-6 shadow-lg border border-gray-700/30 backdrop-blur-sm">
-										<div className="flex items-center space-x-3">
-											<div className="flex space-x-1">
-												<div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-												<div
-													className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-													style={{ animationDelay: "0.1s" }}
-												></div>
-												<div
-													className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-													style={{ animationDelay: "0.2s" }}
-												></div>
+										<div className="bg-gray-800/40 text-white rounded-xl p-6 shadow-lg border border-gray-700/30 backdrop-blur-sm">
+											<div className="flex items-center space-x-3">
+												<div className="flex space-x-1">
+													<div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+													<div
+														className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+														style={{ animationDelay: "0.1s" }}
+													></div>
+													<div
+														className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+														style={{ animationDelay: "0.2s" }}
+													></div>
+												</div>
+												<span className="text-base text-gray-300">
+													AI is thinking...
+												</span>
 											</div>
-											<span className="text-base text-gray-300">
-												AI is thinking...
-											</span>
 										</div>
-									</div>
-								</div>
-							)}
+									</motion.div>
+								)}
 
-							<div ref={messagesEndRef} />
+								<div ref={messagesEndRef} />
+							</div>
 						</div>
 					</div>
-				</div>
 
-				{/* Input Form */}
-				<ChatInput
-					inputValue={inputValue}
-					setInputValue={setInputValue}
-					isLoading={isLoading}
-					uploading={uploading}
-					attachedFiles={attachedFiles}
-					handleFileSelect={handleFileSelect}
-					handleRemoveFile={handleRemoveFile}
-					sendMessage={sendMessage}
-					inputRef={inputRef}
-				/>
+					{/* Input Form */}
+					<ChatInput
+						inputValue={inputValue}
+						setInputValue={setInputValue}
+						isLoading={isLoading}
+						uploading={uploading}
+						attachedFiles={attachedFiles}
+						handleFileSelect={handleFileSelect}
+						handleRemoveFile={handleRemoveFile}
+						sendMessage={sendMessage}
+						inputRef={inputRef}
+					/>
+				</div>
 			</div>
-		</div>
+		</AnimatedPage>
 	);
 };
 

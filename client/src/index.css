@@ -30,7 +30,8 @@ body {
 			transparent 50%
 		),
 		linear-gradient(135deg, rgba(147, 51, 234, 0.03) 0%, transparent 50%) !important;
-	background-attachment: fixed !important;
+	/* Costly on mobile; we'll scope fixed to larger screens below */
+	background-attachment: scroll !important;
 	background-repeat: no-repeat !important;
 	background-size: cover !important;
 	min-height: 100vh;
@@ -39,6 +40,13 @@ body {
 html {
 	background: #000000;
 	min-height: 100vh;
+}
+
+/* On larger screens, enable fixed background for the layered gradients */
+@media (min-width: 1024px) {
+	body {
+		background-attachment: fixed !important;
+	}
 }
 
 * {

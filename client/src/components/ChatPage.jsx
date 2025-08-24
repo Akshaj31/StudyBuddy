@@ -30,6 +30,7 @@ const ChatPage = () => {
 	const [searchQuery, setSearchQuery] = useState("");
 
 	const messagesEndRef = useRef(null);
+	const messagesContainerRef = useRef(null);
 	const inputRef = useRef(null);
 	const {
 		attachedFiles,
@@ -173,7 +174,17 @@ const ChatPage = () => {
 	}, [urlSessionId, location.state, navigate]); // Include URL params and navigation
 
 	const scrollToBottom = () => {
-		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+		// Prefer scrolling the messages container itself to avoid viewport scroll
+		const scroller = messagesContainerRef.current;
+		if (scroller) {
+			scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+			return;
+		}
+		// Fallback (should not cause page scroll due to overscroll containment)
+		messagesEndRef.current?.scrollIntoView({
+			behavior: "smooth",
+			block: "nearest",
+		});
 	};
 
 	// Scroll behavior management
@@ -243,6 +254,9 @@ const ChatPage = () => {
 				};
 
 				setMessages((prev) => [...prev, userMessage]);
+				// User intent to continue: force auto-scroll and jump to bottom right away
+				shouldAutoScroll.current = true;
+				setTimeout(() => scrollToBottom(), 0);
 				setInputValue("");
 				setIsLoading(true);
 
@@ -372,7 +386,8 @@ const ChatPage = () => {
 					{/* Messages Container */}
 					<div className="flex-1 flex flex-col min-h-0 overflow-hidden">
 						<div
-							className="flex-1 overflow-y-auto px-4 py-6 pb-32 min-h-0"
+							ref={messagesContainerRef}
+							className="flex-1 overflow-y-auto overscroll-contain px-4 py-6 pb-32 min-h-0"
 							onScroll={handleScroll}
 						>
 							<div className="space-y-6 max-w-3xl mx-auto">

@@ -32,7 +32,10 @@ function AppContent() {
 	}, [location.pathname]);
 
 	return (
-		<div className="text-white min-h-screen relative">
+		<div
+			className="text-white min-h-screen relative"
+			style={{ isolation: "isolate", willChange: "transform" }}
+		>
 			<div className="light-orb light-orb-1"></div>
 			<div className="light-orb light-orb-2"></div>
 			{/* Hide navbar on dashboard and chat */}

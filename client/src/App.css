@@ -9,6 +9,12 @@
 	opacity: 0.5;
 	z-index: -1;
 	display: none;
+	/* Perf: avoid input events & promote to its own layer */
+	pointer-events: none;
+	backface-visibility: hidden;
+	transform: translateZ(0);
+	will-change: transform, opacity;
+	contain: paint;
 }
 
 /*
@@ -19,6 +25,8 @@
 	.light-orb {
 		display: block;
 		filter: blur(250px);
+		/* Keep animation smooth on larger screens */
+		will-change: transform, opacity;
 	}
 
 	.light-orb-1 {
@@ -84,4 +92,52 @@
 	mask-composite: exclude;
 	pointer-events: none;
 	z-index: -1;
+}
+
+/* --- Hero enhancements --- */
+/* Gradient sweep for headline (runs once) */
+.gradient-sweep {
+	/* Solid blue headline */
+	color: #4f8bff;
+	/* Tiny edge for crispness on all displays */
+	text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes sweep {
+	0% {
+		background-position: 0% 50%;
+	}
+	100% {
+		background-position: 100% 50%;
+	}
+}
+
+/* Mouse-follow spotlight overlay for Hero */
+.mouse-spotlight {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+	background: radial-gradient(
+		360px 360px at var(--mx, 50%) var(--my, 50%),
+		rgba(255, 255, 255, 0.02),
+		rgba(255, 255, 255, 0) 55%
+	);
+	opacity: var(--spot-opa, 0);
+	transition: opacity 250ms ease;
+	mix-blend-mode: soft-light;
+	will-change: background-position, opacity;
+	backface-visibility: hidden;
+}
+
+/* Accessibility: reduce motion */
+@media (prefers-reduced-motion: reduce) {
+	.gradient-sweep {
+		animation: none !important;
+		background: none !important;
+		color: #4f8bff !important;
+	}
+	.mouse-spotlight {
+		display: none !important;
+	}
 }
